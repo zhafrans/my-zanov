@@ -56,7 +56,7 @@
             transition: margin-left 0.3s ease;
             min-height: 100vh;
         }
-        .sidebar.collapsed + .main-content {
+        .main-content.collapsed {
             margin-left: 70px;
         }
         .chart-container {
@@ -97,7 +97,24 @@
         // Toggle sidebar
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const collapseIcon = document.querySelector('.collapse-icon');
+            
             sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('collapsed');  // Ini yang penting!
+            
+            // Rotasi icon dan resize chart
+            if (sidebar.classList.contains('collapsed')) {
+                collapseIcon.style.transform = 'rotate(180deg)';
+            } else {
+                collapseIcon.style.transform = 'rotate(0deg)';
+            }
+            
+            setTimeout(() => {
+                if (window.salesChart) {
+                    window.salesChart.resize();
+                }
+            }, 300);
         }
         
         // Mobile menu toggle
