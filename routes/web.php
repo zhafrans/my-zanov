@@ -2,14 +2,20 @@
 
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\ColorController;
+use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\HeelController;
+use App\Http\Controllers\Web\LocationController;
 use App\Http\Controllers\Web\ProductController;
 use App\Http\Controllers\Web\ProductVariantController;
 use App\Http\Controllers\Web\SizeController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\VehicleController;
 use App\Http\Controllers\Web\WarehouseController;
+use App\Models\City;
+use App\Models\Subdistrict;
+use App\Models\Village;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -89,11 +95,28 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [HeelController::class, 'destroy'])->name('heels.destroy');
     });
 
-     Route::prefix('product-variants')->group(function () {
+    Route::prefix('product-variants')->group(function () {
         Route::get('/', [ProductVariantController::class, 'index'])->name('product-variants.index');
         Route::post('/', [ProductVariantController::class, 'store'])->name('product-variants.store');
         Route::put('/{id}', [ProductVariantController::class, 'update'])->name('product-variants.update');
         Route::get('/{id}', [ProductVariantController::class, 'show'])->name('product-variants.show');
         Route::delete('/{id}', [ProductVariantController::class, 'destroy'])->name('product-variants.destroy');
+    });
+
+    Route::prefix('customers')->name('customers.')->group(function () {
+        Route::get('/', [CustomerController::class, 'index'])->name('index');
+        Route::get('/create', [CustomerController::class, 'create'])->name('create');
+        Route::post('/', [CustomerController::class, 'store'])->name('store');
+        Route::get('/{customer}/edit', [CustomerController::class, 'edit'])->name('edit');
+        Route::put('/{customer}', [CustomerController::class, 'update'])->name('update');
+        Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
+        Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('api')->group(function() {
+        Route::get('provinces', [LocationController::class, 'getProvinces']);
+        Route::get('cities', [LocationController::class, 'getCities']);
+        Route::get('subdistricts', [LocationController::class, 'getSubdistricts']);
+        Route::get('villages', [LocationController::class, 'getVillages']);
     });
 });

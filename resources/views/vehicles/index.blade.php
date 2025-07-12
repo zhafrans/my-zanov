@@ -527,4 +527,88 @@
 </script>
 @endif
 
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmationModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center pb-3">
+            <h3 class="text-lg font-bold text-red-700">Delete Confirmation</h3>
+            <button onclick="closeModal('deleteConfirmationModal')" class="text-gray-400 hover:text-gray-500">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="flex items-start">
+            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <i class="fas fa-exclamation-triangle text-red-600"></i>
+            </div>
+            <div class="ml-4">
+                <h4 class="text-lg font-medium text-gray-900">Delete Customer</h4>
+                <p class="text-sm text-gray-500">Are you sure you want to delete <span id="customerNameToDelete" class="font-semibold"></span>? This action cannot be undone.</p>
+            </div>
+        </div>
+        
+        <form id="deleteForm" method="POST" action="">
+            @csrf
+            @method('DELETE')
+            <div class="flex justify-end pt-5 space-x-3">
+                <button type="button" onclick="closeModal('deleteConfirmationModal')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-md transition">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition">
+                    Delete Customer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Function to open delete confirmation modal
+    function confirmDelete(customerId, customerName) {
+        document.getElementById('customerNameToDelete').textContent = customerName;
+        document.getElementById('deleteForm').action = `/customers/${customerId}`;
+        openModal('deleteConfirmationModal');
+    }
+
+    // Replace the inline delete forms with buttons that trigger the modal
+    document.addEventListener('DOMContentLoaded', function() {
+        // Find all delete buttons and replace them with modal triggers
+        document.querySelectorAll('form[action*="/customers/"]').forEach(form => {
+            if (form.querySelector('button[type="submit"][class*="text-red-600"]')) {
+                const customerId = form.action.split('/').pop();
+                const row = form.closest('tr');
+                const customerName = row.querySelector('td:nth-child(2) div').textContent;
+                
+                // Create new button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'text-red-600 hover:text-red-900';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.onclick = (e) => {
+                    e.preventDefault();
+                    confirmDelete(customerId, customerName);
+                };
+                
+                // Replace form with button
+                form.parentNode.replaceChild(deleteBtn, form);
+            }
+        });
+    });
+
+    // Modal functions (you might already have these)
+    function closeAllModals() {
+        document.querySelectorAll('[id$="Modal"]').forEach(modal => {
+            modal.classList.add('hidden');
+        });
+    }
+
+    function openModal(modalId) {
+        closeAllModals();
+        document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+</script>
+
 @endsection

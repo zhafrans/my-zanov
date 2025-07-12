@@ -124,6 +124,14 @@
                             <i class="fas fa-shopping-bag"></i>
                             <span class="sidebar-text">Product Variants</span>
                         </a>
+
+                       <a href="/customers"
+                            class="nav-item flex items-center space-x-3 p-3 rounded-lg
+                                {{ Request::is('customers*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
+                            <i class="fas fa-users"></i>
+                            <span class="sidebar-text">Customers</span>
+                        </a>
+
             </nav>
         </div>
         
