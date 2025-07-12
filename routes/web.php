@@ -3,6 +3,7 @@
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\ColorController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\ProductController;
 use App\Http\Controllers\Web\SizeController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\VehicleController;
@@ -68,5 +69,13 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}', [SizeController::class, 'update'])->name('sizes.update');
         Route::get('/{id}', [SizeController::class, 'show'])->name('sizes.show');
         Route::delete('/{id}', [SizeController::class, 'destroy'])->name('sizes.destroy');
+    });
+
+    Route::prefix('products')->group(function () {
+        Route::get('/', [ProductController::class, 'index'])->name('products.index');
+        Route::post('/', [ProductController::class, 'store'])->name('products.store');
+        Route::put('/{id}', [ProductController::class, 'update'])->name('products.update');
+        Route::get('/{id}', [ProductController::class, 'show'])->name('products.show');
+        Route::delete('/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
     });
 });

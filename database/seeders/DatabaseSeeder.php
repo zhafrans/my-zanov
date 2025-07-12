@@ -15,7 +15,8 @@ class DatabaseSeeder extends Seeder
             WarehouseSeeder::class,
             VehicleSeeder::class,
             ColorSeeder::class,
-            SizeSeeder::class
+            SizeSeeder::class,
+            ProductSeeder::class
         ]);
     }
 }

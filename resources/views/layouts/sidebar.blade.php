@@ -103,6 +103,13 @@
                             <i class="fas fa-palette"></i>
                             <span class="sidebar-text">Colors</span>
                         </a>
+
+                        <a href="/products"
+                        class="nav-item flex items-center space-x-3 p-3 rounded-lg
+                                {{ Request::is('products*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
+                            <i class="fas fa-shoe-prints"></i>
+                            <span class="sidebar-text">Products</span>
+                        </a>
             </nav>
         </div>
         
