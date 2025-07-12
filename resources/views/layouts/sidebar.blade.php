@@ -90,6 +90,19 @@
                             <span class="sidebar-text">Vehicles</span>
                         </a>
 
+                        <a href="/sizes"
+                        class="nav-item flex items-center space-x-3 p-3 rounded-lg
+                                {{ Request::is('sizes*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
+                            <i class="fas fa-ruler-combined"></i>
+                            <span class="sidebar-text">Sizes</span>
+                        </a>
+
+                        <a href="/colors"
+                        class="nav-item flex items-center space-x-3 p-3 rounded-lg
+                                {{ Request::is('colors*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
+                            <i class="fas fa-palette"></i>
+                            <span class="sidebar-text">Colors</span>
+                        </a>
             </nav>
         </div>
         

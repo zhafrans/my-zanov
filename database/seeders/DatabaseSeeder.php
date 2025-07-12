@@ -13,7 +13,9 @@ class DatabaseSeeder extends Seeder
             UserRoleSeeder::class,
             UserSeeder::class,
             WarehouseSeeder::class,
-            VehicleSeeder::class
+            VehicleSeeder::class,
+            ColorSeeder::class,
+            SizeSeeder::class
         ]);
     }
 }

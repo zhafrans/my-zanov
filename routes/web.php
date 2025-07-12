@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\ColorController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\SizeController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\VehicleController;
 use App\Http\Controllers\Web\WarehouseController;
@@ -44,11 +46,27 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [WarehouseController::class, 'destroy'])->name('warehouses.destroy');
     });
 
-     Route::prefix('vehicles')->group(function () {
+    Route::prefix('vehicles')->group(function () {
         Route::get('/', [VehicleController::class, 'index'])->name('vehicles.index');
         Route::post('/', [VehicleController::class, 'store'])->name('vehicles.store');
         Route::put('/{id}', [VehicleController::class, 'update'])->name('vehicles.update');
         Route::get('/{id}', [VehicleController::class, 'show'])->name('vehicles.show');
         Route::delete('/{id}', [VehicleController::class, 'destroy'])->name('vehicles.destroy');
+    });
+
+    Route::prefix('colors')->group(function () {
+        Route::get('/', [ColorController::class, 'index'])->name('colors.index');
+        Route::post('/', [ColorController::class, 'store'])->name('colors.store');
+        Route::put('/{id}', [ColorController::class, 'update'])->name('colors.update');
+        Route::get('/{id}', [ColorController::class, 'show'])->name('colors.show');
+        Route::delete('/{id}', [ColorController::class, 'destroy'])->name('colors.destroy');
+    });
+
+    Route::prefix('sizes')->group(function () {
+        Route::get('/', [SizeController::class, 'index'])->name('sizes.index');
+        Route::post('/', [SizeController::class, 'store'])->name('sizes.store');
+        Route::put('/{id}', [SizeController::class, 'update'])->name('sizes.update');
+        Route::get('/{id}', [SizeController::class, 'show'])->name('sizes.show');
+        Route::delete('/{id}', [SizeController::class, 'destroy'])->name('sizes.destroy');
     });
 });
