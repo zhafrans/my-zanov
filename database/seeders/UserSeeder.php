@@ -6,12 +6,13 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Buat satu user admin terlebih dahulu
+        // Buat user admin terlebih dahulu
         User::create([
             'name' => 'Zhafran',
             'code' => fake()->numerify('###'),
@@ -20,42 +21,53 @@ class UserSeeder extends Seeder
             'password' => Hash::make('password'),
             'address' => 'Jl. Contoh No.123',
             'profile_image' => 'default.png',
-            'role_id' => 1, // pastikan role_id 1 ada di tabel user_roles
+            'role_id' => 1, // pastikan role_id 1 ada
             'is_active' => 1,
             'email_verified_at' => now(),
             'remember_token' => Str::random(10),
         ]);
 
-        // Buat 500 user tambahan menggunakan chunk untuk optimasi
-        $totalUsers = 500;
-        $chunkSize = 50; // Jumlah user per batch
-        
-        $userChunks = ceil($totalUsers / $chunkSize);
-        
-        for ($i = 0; $i < $userChunks; $i++) {
-            $users = [];
-            $currentChunkSize = ($i == $userChunks - 1) ? ($totalUsers % $chunkSize ?: $chunkSize) : $chunkSize;
-            
-            for ($j = 1; $j <= $currentChunkSize; $j++) {
-                $userNumber = ($i * $chunkSize) + $j;
-                $users[] = [
-                    'name' => fake()->name(),
-                    'code' => fake()->unique()->numerify('#####'),
-                    'username' => 'user' . $userNumber,
-                    'email' => "user{$userNumber}@example.com",
-                    'password' => Hash::make('password'),
-                    'address' => fake()->address(),
-                    'profile_image' => 'default.png',
-                    'role_id' => rand(1, 2), // ganti sesuai role yang tersedia
-                    'is_active' => 1,
-                    'email_verified_at' => now(),
-                    'remember_token' => Str::random(10),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-            
-            User::insert($users);
+        // Ambil semua role dari tabel user_roles
+        $roles = DB::table('user_roles')->get(); // pastikan nama tabelnya benar
+
+        $counter = 1;
+
+        // Buat satu user untuk setiap role
+        foreach ($roles as $role) {
+            User::create([
+                'name' => fake()->name(),
+                'code' => fake()->unique()->numerify('#####'),
+                'username' => 'roleuser' . $counter,
+                'email' => "roleuser{$counter}@example.com",
+                'password' => Hash::make('password'),
+                'address' => fake()->address(),
+                'profile_image' => 'default.png',
+                'role_id' => $role->id,
+                'is_active' => 1,
+                'email_verified_at' => now(),
+                'remember_token' => Str::random(10),
+            ]);
+            $counter++;
+        }
+
+        // Buat user tambahan sebanyak 20 - jumlah role
+        $totalToGenerate = 20;
+        $remainingUsers = $totalToGenerate - $roles->count();
+
+        for ($i = 1; $i <= $remainingUsers; $i++) {
+            User::create([
+                'name' => fake()->name(),
+                'code' => fake()->unique()->numerify('#####'),
+                'username' => 'user' . $i,
+                'email' => "user{$i}@example.com",
+                'password' => Hash::make('password'),
+                'address' => fake()->address(),
+                'profile_image' => 'default.png',
+                'role_id' => $roles->random()->id,
+                'is_active' => 1,
+                'email_verified_at' => now(),
+                'remember_token' => Str::random(10),
+            ]);
         }
     }
 }

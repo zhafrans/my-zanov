@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Vehicle;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -11,6 +12,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserRoleSeeder::class,
             UserSeeder::class,
+            WarehouseSeeder::class,
+            VehicleSeeder::class
         ]);
     }
 }

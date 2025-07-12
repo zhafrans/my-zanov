@@ -12,13 +12,24 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
-        $users = User::with('role:id,code,name')
-            ->orderByDesc('id')
-            ->paginate(10);
         
+        $users = User::with('role:id,code,name')
+            ->when($request->search && $request->search_type == 'name', function($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->search . '%');
+            })
+            ->when($request->search && $request->search_type == 'username', function($query) use ($request) {
+                $query->where('username', 'like', '%' . $request->search . '%');
+            })
+            ->when($request->role, function($query) use ($request) {
+                $query->where('role_id', $request->role);
+            })
+            ->orderByDesc('id')
+            ->paginate(10)
+            ->appends($request->query());
+
         $roles = UserRole::orderBy('id')->get(['id', 'code', 'name']);
 
         return view('users.index', compact('users', 'roles', 'user'));

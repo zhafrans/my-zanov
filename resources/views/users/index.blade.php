@@ -9,15 +9,78 @@
         </button>
     </div>
 
-     <!-- Search Box -->
-    <div class="mb-4">
-        <div class="relative max-w-xs">
-            <input type="text" id="searchInput" placeholder="Search users..." class="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-search text-gray-400"></i>
+    <!-- Search and Filter Section -->
+    <form method="GET" action="{{ route('users.index') }}" class="mb-4 flex items-center space-x-4">
+        <!-- Search Field with Dropdown -->
+        <div class="flex items-center space-x-2">
+            <div class="relative flex items-center">
+                <!-- Search Type Dropdown -->
+                <select 
+                    name="search_type" 
+                    class="appearance-none bg-white border border-gray-300 rounded-l-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                    <option value="name" {{ request('search_type', 'name') == 'name' ? 'selected' : '' }}>Name</option>
+                    <option value="username" {{ request('search_type') == 'username' ? 'selected' : '' }}>Username</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                
+                <!-- Search Input -->
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        name="search" 
+                        placeholder="Search..." 
+                        value="{{ request('search') }}"
+                        class="w-64 pl-4 pr-4 py-2 border border-l-0 rounded-r-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+
+        <!-- Role Filter Dropdown -->
+        <div class="flex items-center space-x-2">
+            <label for="role" class="text-sm font-medium text-gray-700">Role</label>
+            <div class="relative">
+                <select 
+                    name="role" 
+                    id="role"
+                    class="w-48 appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                    <option value="">All Roles</option>
+                    @foreach($roles as $role)
+                        <option value="{{ $role->id }}" {{ request('role') == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
+                    @endforeach
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex space-x-2">
+            <button 
+                type="submit" 
+                class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md transition"
+            >
+                Apply
+            </button>
+            
+            @if(request()->has('search') || request()->has('role') || request()->has('search_type'))
+                <a 
+                    href="{{ route('users.index') }}" 
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition"
+                >
+                    Clear
+                </a>
+            @endif
+        </div>
+    </form>
 
     <!-- Users Table -->
     <div class="bg-white rounded-lg shadow overflow-x-auto">
@@ -26,6 +89,7 @@
                 <tr>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -44,6 +108,7 @@
                             </div>
                         </div>
                     </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $user->username }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $user->email }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">

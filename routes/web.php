@@ -3,6 +3,8 @@
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\UserController;
+use App\Http\Controllers\Web\VehicleController;
+use App\Http\Controllers\Web\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -32,5 +34,21 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}', [UserController::class, 'update'])->name('users.update');
         Route::get('/{id}', [UserController::class, 'show'])->name('users.show');
         Route::delete('/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
+
+    Route::prefix('warehouses')->group(function () {
+        Route::get('/', [WarehouseController::class, 'index'])->name('warehouses.index');
+        Route::post('/', [WarehouseController::class, 'store'])->name('warehouses.store');
+        Route::put('/{id}', [WarehouseController::class, 'update'])->name('warehouses.update');
+        Route::get('/{id}', [WarehouseController::class, 'show'])->name('warehouses.show');
+        Route::delete('/{id}', [WarehouseController::class, 'destroy'])->name('warehouses.destroy');
+    });
+
+     Route::prefix('vehicles')->group(function () {
+        Route::get('/', [VehicleController::class, 'index'])->name('vehicles.index');
+        Route::post('/', [VehicleController::class, 'store'])->name('vehicles.store');
+        Route::put('/{id}', [VehicleController::class, 'update'])->name('vehicles.update');
+        Route::get('/{id}', [VehicleController::class, 'show'])->name('vehicles.show');
+        Route::delete('/{id}', [VehicleController::class, 'destroy'])->name('vehicles.destroy');
     });
 });

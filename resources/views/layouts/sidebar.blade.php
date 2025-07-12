@@ -26,7 +26,7 @@
                             <span class="sidebar-text">Dashboard</span>
                         </a>
 
-                        <a href="/sales"
+                        {{-- <a href="/sales"
                         class="nav-item flex items-center space-x-3 p-3 rounded-lg
                                 {{ Request::is('sales*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
                             <i class="fas fa-chart-line"></i>
@@ -67,13 +67,27 @@
                                 {{ Request::is('settings*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
                             <i class="fas fa-cog"></i>
                             <span class="sidebar-text">Settings</span>
-                        </a>
+                        </a> --}}
 
                         <a href="/users"
                         class="nav-item flex items-center space-x-3 p-3 rounded-lg
                                 {{ Request::is('users*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
                             <i class="fas fa-user"></i>
                             <span class="sidebar-text">User</span>
+                        </a>
+
+                        <a href="/warehouses"
+                        class="nav-item flex items-center space-x-3 p-3 rounded-lg
+                                {{ Request::is('warehouses*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
+                            <i class="fas fa-warehouse"></i>
+                            <span class="sideba r-text">Warehouses</span>
+                        </a>
+
+                        <a href="/vehicles"
+                        class="nav-item flex items-center space-x-3 p-3 rounded-lg
+                                {{ Request::is('vehicles*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
+                            <i class="fas fa-car"></i>
+                            <span class="sidebar-text">Vehicles</span>
                         </a>
 
             </nav>

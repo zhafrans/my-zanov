@@ -24,6 +24,20 @@ class UserRoleSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            [
+                'code' => 'DRIVER',
+                'name' => 'Driver',
+                'scope' => 'SALES',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'code' => 'COLLECTOR',
+                'name' => 'Collector',
+                'scope' => 'SALES',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
     }
 }
