@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyZANOV - Shoe Management Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
@@ -120,6 +121,12 @@
         // Mobile menu toggle
         document.getElementById('mobile-menu-button').addEventListener('click', function() {
             const sidebar = document.querySelector('.sidebar');
+
+            // Jika sedang collapsed, hilangkan dulu collapsed supaya tampil di mobile
+            if (window.innerWidth <= 768 && sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+            }
+
             sidebar.classList.toggle('show');
         });
         

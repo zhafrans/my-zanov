@@ -13,8 +13,8 @@
                     <i class="fas fa-user text-white"></i>
                 </div>
                 <div class="sidebar-text">
-                    <p class="font-medium">{{ $user->name }}</p>
-                    <p class="text-primary-300 text-sm">{{ $user->role->name }}</p>
+                    <p class="font-medium">{{ Auth::user()->name }}</p>
+                    <p class="text-primary-300 text-sm">{{ Auth::user()->role->name }}</p>
                 </div>
             </div>
             
@@ -69,9 +69,9 @@
                             <span class="sidebar-text">Settings</span>
                         </a>
 
-                        <a href="{{ route('users.index') }}"
+                        <a href="/users"
                         class="nav-item flex items-center space-x-3 p-3 rounded-lg
-                                {{ Route::is('users.*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
+                                {{ Request::is('users*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
                             <i class="fas fa-user"></i>
                             <span class="sidebar-text">User</span>
                         </a>
