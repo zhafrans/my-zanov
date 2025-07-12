@@ -73,7 +73,7 @@
                         class="nav-item flex items-center space-x-3 p-3 rounded-lg
                                 {{ Request::is('users*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
                             <i class="fas fa-user"></i>
-                            <span class="sidebar-text">User</span>
+                            <span class="sidebar-text">Users</span>
                         </a>
 
                         <a href="/warehouses"
@@ -108,7 +108,21 @@
                         class="nav-item flex items-center space-x-3 p-3 rounded-lg
                                 {{ Request::is('products*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
                             <i class="fas fa-shoe-prints"></i>
-                            <span class="sidebar-text">Products</span>
+                            <span class="sidebar-text">Product Models</span>
+                        </a>
+
+                        <a href="/heels"
+                            class="nav-item flex items-center space-x-3 p-3 rounded-lg
+                                {{ Request::is('heels*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
+                            <i class="fas fa-shapes"></i>
+                            <span class="sidebar-text">Heels</span>
+                        </a>
+
+                        <a href="/product-variants"
+                        class="nav-item flex items-center space-x-3 p-3 rounded-lg
+                                {{ Request::is('product-variants*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
+                            <i class="fas fa-shopping-bag"></i>
+                            <span class="sidebar-text">Product Variants</span>
                         </a>
             </nav>
         </div>

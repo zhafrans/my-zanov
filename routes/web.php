@@ -3,7 +3,9 @@
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\ColorController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\HeelController;
 use App\Http\Controllers\Web\ProductController;
+use App\Http\Controllers\Web\ProductVariantController;
 use App\Http\Controllers\Web\SizeController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\VehicleController;
@@ -77,5 +79,21 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}', [ProductController::class, 'update'])->name('products.update');
         Route::get('/{id}', [ProductController::class, 'show'])->name('products.show');
         Route::delete('/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+    });
+
+    Route::prefix('heels')->group(function () {
+        Route::get('/', [HeelController::class, 'index'])->name('heels.index');
+        Route::post('/', [HeelController::class, 'store'])->name('heels.store');
+        Route::put('/{id}', [HeelController::class, 'update'])->name('heels.update');
+        Route::get('/{id}', [HeelController::class, 'show'])->name('heels.show');
+        Route::delete('/{id}', [HeelController::class, 'destroy'])->name('heels.destroy');
+    });
+
+     Route::prefix('product-variants')->group(function () {
+        Route::get('/', [ProductVariantController::class, 'index'])->name('product-variants.index');
+        Route::post('/', [ProductVariantController::class, 'store'])->name('product-variants.store');
+        Route::put('/{id}', [ProductVariantController::class, 'update'])->name('product-variants.update');
+        Route::get('/{id}', [ProductVariantController::class, 'show'])->name('product-variants.show');
+        Route::delete('/{id}', [ProductVariantController::class, 'destroy'])->name('product-variants.destroy');
     });
 });

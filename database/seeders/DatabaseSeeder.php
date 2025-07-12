@@ -2,9 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Vehicle;
 use Illuminate\Database\Seeder;
-
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
@@ -16,7 +14,13 @@ class DatabaseSeeder extends Seeder
             VehicleSeeder::class,
             ColorSeeder::class,
             SizeSeeder::class,
-            ProductSeeder::class
+            ProductSeeder::class,
+            HeelSeeder::class,
+            ProductVariantSeeder::class,
+            ProvinceSeeder::class,
+            CitySeeder::class,
+            SubdistrictSeeder::class,
+            VillageSeeder::class,
         ]);
     }
 }
