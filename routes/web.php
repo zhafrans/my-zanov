@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\LocationController;
 use App\Http\Controllers\Web\ProductController;
 use App\Http\Controllers\Web\ProductVariantController;
 use App\Http\Controllers\Web\SizeController;
+use App\Http\Controllers\Web\StockAmountController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\VehicleController;
 use App\Http\Controllers\Web\WarehouseController;
@@ -118,5 +119,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('cities', [LocationController::class, 'getCities']);
         Route::get('subdistricts', [LocationController::class, 'getSubdistricts']);
         Route::get('villages', [LocationController::class, 'getVillages']);
+        Route::get('/warehouses/{warehouse}/stock-amounts', [StockAmountController::class, 'getWarehouseStock']);
     });
+
+    Route::prefix('stock-amounts')->group(function () {
+        Route::get('/', [StockAmountController::class, 'index'])->name('stock-amounts.index');
+        Route::post('/', [StockAmountController::class, 'store'])->name('stock-amounts.store');
+        Route::put('/{id}', [StockAmountController::class, 'update'])->name('stock-amounts.update');
+        Route::get('/{id}', [StockAmountController::class, 'show'])->name('stock-amounts.show');
+        Route::delete('/{id}', [StockAmountController::class, 'destroy'])->name('stock-amounts.destroy');
+        
+    });
+
 });

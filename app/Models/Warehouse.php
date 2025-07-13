@@ -7,4 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Warehouse extends Model
 {
     protected $guarded = [];
+
+    public function stockAmounts()
+    {
+        return $this->hasMany(StockAmount::class);
+    }
 }

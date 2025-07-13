@@ -132,6 +132,13 @@
                             <span class="sidebar-text">Customers</span>
                         </a>
 
+                        <a href="/stock-amounts"
+                            class="nav-item flex items-center space-x-3 p-3 rounded-lg
+                                {{ Request::is('stock-amounts*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}">
+                            <i class="fas fa-box"></i>
+                            <span class="sidebar-text">Stock Amounts</span>
+                        </a>
+
             </nav>
         </div>
         
