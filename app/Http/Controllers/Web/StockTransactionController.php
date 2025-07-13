@@ -64,12 +64,10 @@ class StockTransactionController extends Controller
     {
         $request->validate([
             'stock_amount_id' => 'required|exists:stock_amounts,id',
-            'warehouse_id' => 'required|exists:warehouses,id',
             'quantity' => 'required|integer|min:1',
-            'type' => 'required|in:in,out',
             'is_adjustment' => 'sometimes|boolean',
             'to_warehouse_id' => 'nullable|required_if:destination,transfer|exists:warehouses,id',
-            'destination' => 'nullable|in:lost,transfer,add',
+            'destination' => 'required|in:lost,transfer,add', // Changed to required
             'note' => 'nullable|string|max:500',
         ]);
 
@@ -77,34 +75,39 @@ class StockTransactionController extends Controller
 
         try {
             // Dapatkan stock amount yang terkait
-            $stockAmount = StockAmount::findOrFail($request->stock_amount_id);
+            $stockAmount = StockAmount::with('warehouse')->findOrFail($request->stock_amount_id);
+
+            // Tentukan type berdasarkan destination
+            $type = ($request->destination === 'add') ? 'in' : 'out';
             
             // Hitung jumlah stok sebelum transaksi
             $quantityBefore = $stockAmount->total_amount;
             
+            // Validasi stok cukup hanya untuk lost dan transfer
+            if (in_array($request->destination, ['lost', 'transfer']) && 
+                $stockAmount->total_amount < $request->quantity && 
+                !$request->is_adjustment) {
+                throw new Exception('Insufficient stock for this transaction');
+            }
+            
             // Buat transaksi
             $transaction = StockTransaction::create([
                 'stock_amount_id' => $request->stock_amount_id,
-                'warehouse_id' => $request->warehouse_id,
+                'warehouse_id' => $stockAmount->warehouse_id,
                 'quantity' => $request->quantity,
-                'type' => $request->type,
+                'type' => $type,
                 'is_adjustment' => $request->is_adjustment ?? false,
                 'to_warehouse_id' => $request->to_warehouse_id,
                 'destination' => $request->destination,
                 'note' => $request->note,
-                'quantity_before' => $quantityBefore, // Simpan jumlah sebelum transaksi
+                'quantity_before' => $quantityBefore,
                 'user_id' => Auth::id(),
             ]);
 
             // Update stock amount berdasarkan jenis transaksi
-            if ($request->type === 'in') {
+            if ($type === 'in') {
                 $stockAmount->total_amount += $request->quantity;
             } else { // type 'out'
-                // Validasi stok cukup
-                if ($stockAmount->total_amount < $request->quantity && !$request->is_adjustment) {
-                    throw new Exception('Insufficient stock for this transaction');
-                }
-                
                 $stockAmount->total_amount -= $request->quantity;
             }
             
@@ -135,12 +138,10 @@ class StockTransactionController extends Controller
     {
         $request->validate([
             'stock_amount_id' => 'required|exists:stock_amounts,id',
-            'warehouse_id' => 'required|exists:warehouses,id',
             'quantity' => 'required|integer|min:1',
-            'type' => 'required|in:in,out',
             'is_adjustment' => 'sometimes|boolean',
             'to_warehouse_id' => 'nullable|required_if:destination,transfer|exists:warehouses,id',
-            'destination' => 'nullable|in:lost,transfer,add',
+            'destination' => 'required|in:lost,transfer,add', // Changed to required
             'note' => 'nullable|string|max:500',
         ]);
 
@@ -150,13 +151,23 @@ class StockTransactionController extends Controller
 
         try {
             // Dapatkan stock amount yang terkait
-            $stockAmount = StockAmount::findOrFail($request->stock_amount_id);
-            
+            $stockAmount = StockAmount::with('warehouse')->findOrFail($request->stock_amount_id);
+
+            // Tentukan type berdasarkan destination
+            $type = ($request->destination === 'add') ? 'in' : 'out';        
+
             // Kembalikan stok ke keadaan sebelum transaksi
             if ($transaction->type === 'in') {
                 $stockAmount->total_amount -= $transaction->quantity;
             } else { // type 'out'
                 $stockAmount->total_amount += $transaction->quantity;
+            }
+            
+            // Validasi stok cukup hanya untuk lost dan transfer
+            if (in_array($request->destination, ['lost', 'transfer']) && 
+                $stockAmount->total_amount < $request->quantity && 
+                !$request->is_adjustment) {
+                throw new Exception('Insufficient stock for this transaction');
             }
             
             // Jika transfer sebelumnya, kembalikan stok gudang tujuan
@@ -174,9 +185,9 @@ class StockTransactionController extends Controller
             // Update transaksi
             $transaction->update([
                 'stock_amount_id' => $request->stock_amount_id,
-                'warehouse_id' => $request->warehouse_id,
+                'warehouse_id' => $stockAmount->warehouse_id,
                 'quantity' => $request->quantity,
-                'type' => $request->type,
+                'type' => $type,
                 'is_adjustment' => $request->is_adjustment ?? false,
                 'to_warehouse_id' => $request->to_warehouse_id,
                 'destination' => $request->destination,
@@ -185,14 +196,9 @@ class StockTransactionController extends Controller
             ]);
 
             // Update stock amount berdasarkan jenis transaksi baru
-            if ($request->type === 'in') {
+            if ($type === 'in') {
                 $stockAmount->total_amount += $request->quantity;
             } else { // type 'out'
-                // Validasi stok cukup
-                if ($stockAmount->total_amount < $request->quantity && !$request->is_adjustment) {
-                    throw new Exception('Insufficient stock for this transaction');
-                }
-                
                 $stockAmount->total_amount -= $request->quantity;
             }
             

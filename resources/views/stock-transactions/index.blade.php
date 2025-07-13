@@ -87,6 +87,25 @@
             </div>
         </div>
 
+        <!-- Adjustment Filter -->
+        <div class="flex items-center space-x-2">
+            <label for="is_adjustment" class="text-sm font-medium text-gray-700">Adjustment</label>
+            <div class="relative">
+                <select 
+                    name="is_adjustment" 
+                    id="is_adjustment"
+                    class="w-32 appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                    <option value="">All</option>
+                    <option value="1" {{ request('is_adjustment') === '1' ? 'selected' : '' }}>Yes</option>
+                    <option value="0" {{ request('is_adjustment') === '0' ? 'selected' : '' }}>No</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+
         <!-- Type Filter Dropdown -->
         <div class="flex items-center space-x-2">
             <label for="type" class="text-sm font-medium text-gray-700">Type</label>
@@ -100,25 +119,6 @@
                     @foreach($types as $key => $label)
                         <option value="{{ $key }}" {{ request('type') == $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Adjustment Filter -->
-        <div class="flex items-center space-x-2">
-            <label for="is_adjustment" class="text-sm font-medium text-gray-700">Adjustment</label>
-            <div class="relative">
-                <select 
-                    name="is_adjustment" 
-                    id="is_adjustment"
-                    class="w-32 appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                    <option value="">All</option>
-                    <option value="1" {{ request('is_adjustment') === '1' ? 'selected' : '' }}>Yes</option>
-                    <option value="0" {{ request('is_adjustment') === '0' ? 'selected' : '' }}>No</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                     <i class="fas fa-chevron-down"></i>
@@ -235,10 +235,13 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-900">
                             @if($transaction->destination)
-                                <span class="px-2 py-1 text-xs rounded-full 
+                                <span class="px-2 py-1 text-xs rounded-full inline-flex items-center space-x-1
                                     {{ $transaction->destination === 'lost' ? 'bg-red-100 text-red-800' : 
-                                       ($transaction->destination === 'transfer' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800') }}">
-                                    {{ $destinations[$transaction->destination] }}
+                                    ($transaction->destination === 'transfer' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800') }}">
+                                    @if($transaction->destination === 'transfer')
+                                        <i class="fas fa-arrows-alt-h"></i> <!-- anak panah kanan kiri -->
+                                    @endif
+                                    <span>{{ $destinations[$transaction->destination] }}</span>
                                 </span>
                             @else
                                 -
@@ -294,52 +297,20 @@
             <form id="createStockTransactionForm" method="POST" action="{{ route('stock-transactions.store') }}">
                 @csrf
                 <div class="space-y-4">
-                    <!-- Stock Amount -->
+                    <!-- Source Warehouse (combines stock amount and warehouse) -->
                     <div>
-                        <label for="stock_amount_id" class="block text-sm font-medium text-gray-700">Stock Amount *</label>
-                        <select name="stock_amount_id" id="stock_amount_id" required
+                        <label for="source_warehouse_id" class="block text-sm font-medium text-gray-700">Source Warehouse *</label>
+                        <select name="stock_amount_id" id="source_warehouse_id" required
                             class="mt-1 block w-full border {{ $errors->has('stock_amount_id') ? 'border-red-500' : 'border-gray-300' }} 
                                 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="">-- Select Stock Amount --</option>
+                            <option value="">-- Select Source Warehouse --</option>
                             @foreach($stockAmounts as $stockAmount)
                                 <option value="{{ $stockAmount->id }}" {{ old('stock_amount_id') == $stockAmount->id ? 'selected' : '' }}>
-                                    {{ $stockAmount->warehouse->name }} - Total: {{ $stockAmount->total_amount }}
+                                    {{ $stockAmount->warehouse->name }} - Stock: {{ $stockAmount->total_amount }}
                                 </option>
                             @endforeach
                         </select>
                         @error('stock_amount_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Warehouse -->
-                    <div>
-                        <label for="warehouse_id" class="block text-sm font-medium text-gray-700">From Warehouse *</label>
-                        <select name="warehouse_id" id="warehouse_id" required
-                            class="mt-1 block w-full border {{ $errors->has('warehouse_id') ? 'border-red-500' : 'border-gray-300' }} 
-                                rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="">-- Select Warehouse --</option>
-                            @foreach($warehouses as $warehouse)
-                                <option value="{{ $warehouse->id }}" {{ old('warehouse_id') == $warehouse->id ? 'selected' : '' }}>{{ $warehouse->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('warehouse_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Type -->
-                    <div>
-                        <label for="type" class="block text-sm font-medium text-gray-700">Type *</label>
-                        <select name="type" id="type" required
-                            class="mt-1 block w-full border {{ $errors->has('type') ? 'border-red-500' : 'border-gray-300' }} 
-                                rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="">-- Select Type --</option>
-                            @foreach($types as $key => $label)
-                                <option value="{{ $key }}" {{ old('type') == $key ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        @error('type')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -355,7 +326,7 @@
                         @enderror
                     </div>
 
-                     <!-- Adjustment Filter -->
+                     <!-- Adjustment Field -->
                     <div class="flex items-center space-x-2">
                         <label for="is_adjustment" class="text-sm font-medium text-gray-700">Adjustment</label>
                         <div class="relative">
@@ -363,6 +334,7 @@
                                 name="is_adjustment" 
                                 id="is_adjustment"
                                 class="w-32 appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                required
                             >
                                 <option value="">All</option>
                                 <option value="1" {{ request('is_adjustment') === '1' ? 'selected' : '' }}>Yes</option>
@@ -456,12 +428,8 @@
                 
                 <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
                     <div>
-                        <p class="text-sm font-medium text-gray-500">From Warehouse</p>
-                        <p id="show_from_warehouse" class="text-sm text-gray-900 mt-1"></p>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">To Warehouse</p>
-                        <p id="show_to_warehouse" class="text-sm text-gray-900 mt-1"></p>
+                        <p class="text-sm font-medium text-gray-500">Source Warehouse</p>
+                        <p id="show_source_warehouse" class="text-sm text-gray-900 mt-1"></p>
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-500">Quantity</p>
@@ -556,26 +524,15 @@
                 @csrf
                 @method('PUT')
                 <div class="space-y-4">
-                    <!-- Stock Amount -->
+                    <!-- Source Warehouse (combines stock amount and warehouse) -->
                     <div>
-                        <label for="edit_stock_amount_id" class="block text-sm font-medium text-gray-700">Stock Amount *</label>
-                        <select name="stock_amount_id" id="edit_stock_amount_id" required
+                        <label for="edit_source_warehouse_id" class="block text-sm font-medium text-gray-700">Source Warehouse *</label>
+                        <select name="stock_amount_id" id="edit_source_warehouse_id" required
                             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
                             @foreach($stockAmounts as $stockAmount)
                                 <option value="{{ $stockAmount->id }}">
-                                    {{ $stockAmount->warehouse->name }} - Total: {{ $stockAmount->total_amount }}
+                                    {{ $stockAmount->warehouse->name }} - Stock: {{ $stockAmount->total_amount }}
                                 </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Warehouse -->
-                    <div>
-                        <label for="edit_warehouse_id" class="block text-sm font-medium text-gray-700">From Warehouse *</label>
-                        <select name="warehouse_id" id="edit_warehouse_id" required
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            @foreach($warehouses as $warehouse)
-                                <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -603,7 +560,7 @@
                         <label for="edit_is_adjustment" class="block text-sm font-medium text-gray-700">Adjustment</label>
                         <div class="mt-1">
                             <label class="inline-flex items-center">
-                                <input type="checkbox" name="is_adjustment" id="edit_is_adjustment" value="1"
+                                <input type="checkbox" name="is_adjustment" id="edit_is_adjustment" value="1" required
                                     class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
                                 <span class="ml-2">This is an adjustment transaction</span>
                             </label>
@@ -703,8 +660,11 @@
         
         // Isi data modal
         document.getElementById('show_transaction_date').textContent = formattedDate;
-        document.getElementById('show_from_warehouse').textContent = transaction.warehouse?.name || '-';
-        document.getElementById('show_to_warehouse').textContent = transaction.to_warehouse?.name || '-';
+        let sourceWarehouseText = '-';
+        if (transaction.stock_amount) {
+            sourceWarehouseText = `${transaction.stock_amount.warehouse?.name || 'Unknown Warehouse'} (Stock: ${transaction.stock_amount.total_amount})`;
+        }
+        document.getElementById('show_source_warehouse').textContent = sourceWarehouseText;
         document.getElementById('show_quantity').textContent = transaction.quantity || '0';
         document.getElementById('show_adjustment').textContent = transaction.is_adjustment ? 'Yes' : 'No';
         document.getElementById('show_destination').textContent = transaction.destination ? 
@@ -725,10 +685,12 @@
         // Tampilkan type dengan styling
         const typeElement = document.getElementById('show_type');
         if (typeElement) {
+            // Determine type based on destination
+            const type = (transaction.destination === 'add') ? 'in' : 'out';
             typeElement.innerHTML = `
                 <span class="px-2 py-1 text-xs rounded-full 
-                    ${transaction.type === 'in' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                    ${transaction.type ? transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1) : 'Unknown'}
+                    ${type === 'in' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                    ${type.toUpperCase()}
                 </span>`;
         }
 
@@ -757,10 +719,8 @@ function openModal(modalId) {
         document.getElementById('editStockTransactionForm').action = `/stock-transactions/${transaction.id}`;
         
         // Fill form fields
-        document.getElementById('edit_stock_amount_id').value = transaction.stock_amount_id;
-        document.getElementById('edit_warehouse_id').value = transaction.warehouse_id;
+        document.getElementById('edit_source_warehouse_id').value = transaction.stock_amount_id;
         document.getElementById('edit_quantity').value = transaction.quantity;
-        document.getElementById('edit_type').value = transaction.type;
         document.getElementById('edit_is_adjustment').checked = transaction.is_adjustment;
         document.getElementById('edit_destination').value = transaction.destination || '';
         document.getElementById('edit_to_warehouse_id').value = transaction.to_warehouse_id || '';
