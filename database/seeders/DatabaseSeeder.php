@@ -17,12 +17,14 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             HeelSeeder::class,
             ProductVariantSeeder::class,
+            StockTypeSeeder::class,
+            StockAmountSeeder::class,
+            StockTransactionSeeder::class,
             ProvinceSeeder::class,
             CitySeeder::class,
             SubdistrictSeeder::class,
             VillageSeeder::class,
-            CustomerSeeder::class,
-            StockAmountSeeder::class
+            CustomerSeeder::class
         ]);
     }
 }

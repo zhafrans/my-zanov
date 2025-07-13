@@ -15,4 +15,9 @@ class StockAmount extends Model
     {
         return $this->belongsTo(Warehouse::class);
     }
+
+    public function items()
+    {
+        return $this->hasMany(StockAmountItem::class);
+    }
 }

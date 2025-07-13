@@ -8,8 +8,8 @@ class Warehouse extends Model
 {
     protected $guarded = [];
 
-    public function stockAmounts()
+    public function stockAmount()
     {
-        return $this->hasMany(StockAmount::class);
+        return $this->hasOne(StockAmount::class);
     }
 }

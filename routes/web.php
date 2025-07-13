@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\ProductController;
 use App\Http\Controllers\Web\ProductVariantController;
 use App\Http\Controllers\Web\SizeController;
 use App\Http\Controllers\Web\StockAmountController;
+use App\Http\Controllers\Web\StockTransactionController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\VehicleController;
 use App\Http\Controllers\Web\WarehouseController;
@@ -131,4 +132,12 @@ Route::middleware(['auth'])->group(function () {
         
     });
 
-});
+    Route::prefix('stock-transactions')->group(function () {
+        Route::get('/', [StockTransactionController::class, 'index'])->name('stock-transactions.index');
+        Route::post('/', [StockTransactionController::class, 'store'])->name('stock-transactions.store');
+        Route::put('/{id}', [StockTransactionController::class, 'update'])->name('stock-transactions.update');
+        Route::get('/{id}', [StockTransactionController::class, 'show'])->name('stock-transactions.show');
+        Route::delete('/{id}', [StockTransactionController::class, 'destroy'])->name('stock-transactions.destroy');
+    });
+
+    });
