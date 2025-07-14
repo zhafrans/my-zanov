@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
             CitySeeder::class,
             SubdistrictSeeder::class,
             VillageSeeder::class,
-            CustomerSeeder::class
+            CustomerSeeder::class,
+            TransactionSeeder::class
         ]);
     }
 }

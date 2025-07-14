@@ -171,6 +171,13 @@
                         <i class="fas fa-users text-sm"></i>
                         <span class="sidebar-text text-sm">Customers</span>
                     </a>
+                    <a href="/transactions"
+                        class="nav-item flex items-center space-x-3 p-2 rounded-lg
+                            {{ Request::is('transactions*') ? 'bg-primary-700 text-white' : 'text-primary-200 hover:bg-primary-700 hover:text-white' }}"
+                        onclick="keepGroupOpen(event, 'sales')">
+                        <i class="fas fa-file-invoice-dollar text-sm"></i>
+                        <span class="sidebar-text text-sm">Transactions</span>
+                    </a>
                 </div>
             </div>
         </nav>

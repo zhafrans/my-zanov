@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\ProductVariantController;
 use App\Http\Controllers\Web\SizeController;
 use App\Http\Controllers\Web\StockAmountController;
 use App\Http\Controllers\Web\StockTransactionController;
+use App\Http\Controllers\Web\TransactionController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\VehicleController;
 use App\Http\Controllers\Web\WarehouseController;
@@ -138,6 +139,14 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}', [StockTransactionController::class, 'update'])->name('stock-transactions.update');
         Route::get('/{id}', [StockTransactionController::class, 'show'])->name('stock-transactions.show');
         Route::delete('/{id}', [StockTransactionController::class, 'destroy'])->name('stock-transactions.destroy');
+    });
+
+    Route::prefix('transactions')->group(function () {
+        Route::get('/', [TransactionController::class, 'index'])->name('transactions.index');
+        Route::post('/', [TransactionController::class, 'store'])->name('transactions.store');
+        Route::put('/{id}', [TransactionController::class, 'update'])->name('transactions.update');
+        Route::get('/{id}', [TransactionController::class, 'show'])->name('transactions.show');
+        Route::delete('/{id}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
     });
 
     });
