@@ -22,7 +22,7 @@ class TransactionItem extends Model
         return $this->belongsTo(Transaction::class);
     }
 
-    public function variant()
+    public function productVariant()
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }

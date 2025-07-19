@@ -12,7 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('transaction_id')->constrained('transactions')->onDelete('cascade');
             $table->decimal('installment_amount', 20);
-
+            $table->date('payment_date');
+            $table->foreignId('collector_id')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

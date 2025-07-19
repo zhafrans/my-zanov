@@ -27,8 +27,14 @@ class User extends Authenticatable
         ];
     }
 
-  public function role()
+    public function role()
     {
         return $this->belongsTo(UserRole::class, 'role_id');
     }
+
+    public function vehicle() 
+    {
+        return $this->hasOne(Vehicle::class, 'seller_id');
+    }
+
 }

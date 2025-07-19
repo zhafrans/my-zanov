@@ -11,11 +11,12 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->string('invoice')->unique();
+            $table->decimal('deal_price', 20);
             $table->foreignId('customer_id')->constrained('customers');
-            $table->foreignId('product_variant_id')->constrained('product_variants');
             $table->foreignId('seller_id')->constrained('users');       
-            $table->enum('payment_type', ['credit', 'cash']);
-            $table->enum('status', ['paid', 'installment']);
+            $table->enum('payment_type', ['installment', 'cash']);
+            $table->enum('status', ['paid', 'pending']);
+            $table->date('transaction_date'); 
             $table->timestamps();
         });
     }

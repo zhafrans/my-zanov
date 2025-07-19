@@ -143,10 +143,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('transactions')->group(function () {
         Route::get('/', [TransactionController::class, 'index'])->name('transactions.index');
+        Route::get('/create', [TransactionController::class, 'create'])->name('transactions.create');
         Route::post('/', [TransactionController::class, 'store'])->name('transactions.store');
-        Route::put('/{id}', [TransactionController::class, 'update'])->name('transactions.update');
         Route::get('/{id}', [TransactionController::class, 'show'])->name('transactions.show');
         Route::delete('/{id}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+        Route::post('{id}/pay-installment', [TransactionController::class, 'payInstallment'])->name('transactions.pay-installment');
     });
-
+    
     });

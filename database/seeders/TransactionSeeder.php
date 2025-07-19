@@ -26,19 +26,20 @@ class TransactionSeeder extends Seeder
         }
 
         for ($i = 0; $i < 50; $i++) {
-            $paymentType = fake()->randomElement(['credit', 'cash']);
-            $status = $paymentType === 'cash' ? 'paid' : fake()->randomElement(['paid', 'installment']);
+            $paymentType = fake()->randomElement(['installment', 'cash']);
+            $status = $paymentType === 'cash' ? 'paid' : fake()->randomElement(['paid', 'pending']);
 
             $variantMain = $variants->random();
 
             // Buat transaksi utama
             $transaction = Transaction::create([
                 'invoice'            => 'INV-' . strtoupper(Str::random(8)),
+                'deal_price'         => fake()->numberBetween(100000, 200000),
                 'customer_id'        => fake()->randomElement($customers),
-                'product_variant_id' => $variantMain->id,
                 'seller_id'          => fake()->randomElement($sellers),
                 'payment_type'       => $paymentType,
                 'status'             => $status,
+                'transaction_date'   => now(),
             ]);
 
             // Buat item-item yang dibeli (1-3)

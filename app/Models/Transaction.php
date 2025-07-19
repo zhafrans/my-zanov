@@ -9,23 +9,11 @@ class Transaction extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'invoice',
-        'customer_id',
-        'product_id',
-        'seller_id',
-        'payment_type',
-        'status'
-    ];
+    protected $guarded = [];
 
     public function customer()
     {
         return $this->belongsTo(Customer::class);
-    }
-
-    public function productVariant()
-    {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
     public function seller()

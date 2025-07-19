@@ -78,7 +78,7 @@ class CustomerController extends Controller
             'province_id' => 'required|exists:provinces,id',
             'city_id' => 'required|exists:cities,id',
             'subdistrict_id' => 'required|exists:subdistricts,id',
-            'village_id' => 'required|exists:villages,id',
+            'village_id' => 'nullable|exists:villages,id',
             'phone' => 'nullable|string|max:20',
         ]);
 

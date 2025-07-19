@@ -9,10 +9,7 @@ class TransactionInstallment extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'transaction_id',
-        'installment_amount'
-    ];
+    protected $guarded = [];
 
     public function transaction()
     {

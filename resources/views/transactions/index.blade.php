@@ -4,129 +4,176 @@
 <div class="container mx-auto px-4 py-6">
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-primary-800">Transaction Management</h2>
-        <button onclick="openModal('createTransactionModal')" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md transition">
+        <a href="{{ route('transactions.create') }}" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md transition">
             <i class="fas fa-plus mr-2"></i>Create Transaction
-        </button>
+        </a>
     </div>
 
     <!-- Search and Filter Section -->
-    <form method="GET" action="{{ route('transactions.index') }}" class="mb-4 bg-white p-4 rounded-lg shadow">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- Search Field -->
-            <div>
-                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search Invoice</label>
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        name="search" 
-                        id="search"
-                        placeholder="Search by invoice..."
-                        value="{{ request('search') }}"
-                        class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <i class="fas fa-search text-gray-400"></i>
-                    </div>
+    <form method="GET" action="{{ route('transactions.index') }}" class="mb-4 flex flex-wrap items-center gap-4">
+        <!-- Search Field -->
+        <div class="relative flex items-center">
+            <div class="relative">
+                <input 
+                    type="text" 
+                    name="search" 
+                    placeholder="Search by invoice..." 
+                    value="{{ request('search') }}"
+                    class="w-64 pl-4 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
                 </div>
-            </div>
-
-            <!-- Customer Filter -->
-            <div>
-                <label for="customer_id" class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-                <select 
-                    name="customer_id" 
-                    id="customer_id"
-                    class="w-full appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                    <option value="">All Customers</option>
-                    @foreach($customers as $customer)
-                        <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
-                            {{ $customer->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Product Variant Filter -->
-            <div>
-                <label for="product_variant_id" class="block text-sm font-medium text-gray-700 mb-1">Product Variant</label>
-                <select 
-                    name="product_variant_id" 
-                    id="product_variant_id"
-                    class="w-full appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                    <option value="">All Variants</option>
-                    @foreach($productVariants as $variant)
-                        <option value="{{ $variant->id }}" {{ request('product_variant_id') == $variant->id ? 'selected' : '' }}>
-                            {{ $variant->code }} ({{ $variant->product->name ?? '' }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Seller Filter -->
-            <div>
-                <label for="seller_id" class="block text-sm font-medium text-gray-700 mb-1">Seller</label>
-                <select 
-                    name="seller_id" 
-                    id="seller_id"
-                    class="w-full appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                    <option value="">All Sellers</option>
-                    @foreach($sellers as $seller)
-                        <option value="{{ $seller->id }}" {{ request('seller_id') == $seller->id ? 'selected' : '' }}>
-                            {{ $seller->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Payment Type Filter -->
-            <div>
-                <label for="payment_type" class="block text-sm font-medium text-gray-700 mb-1">Payment Type</label>
-                <select 
-                    name="payment_type" 
-                    id="payment_type"
-                    class="w-full appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                    <option value="">All Types</option>
-                    <option value="credit" {{ request('payment_type') == 'credit' ? 'selected' : '' }}>Credit</option>
-                    <option value="cash" {{ request('payment_type') == 'cash' ? 'selected' : '' }}>Cash</option>
-                </select>
-            </div>
-
-            <!-- Status Filter -->
-            <div>
-                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select 
-                    name="status" 
-                    id="status"
-                    class="w-full appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                    <option value="">All Statuses</option>
-                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
-                    <option value="installment" {{ request('status') == 'installment' ? 'selected' : '' }}>Installment</option>
-                </select>
             </div>
         </div>
 
+        <!-- Customer Filter Dropdown -->
+        <div class="flex items-center space-x-2">
+            <label for="customer_id" class="text-sm font-medium text-gray-700">Customer</label>
+            <div class="relative">
+                <select 
+                    name="customer_id" 
+                    id="customer_id"
+                    class="w-48 appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                    <option value="">All Customers</option>
+                    @foreach($customers as $customer)
+                        <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
+                    @endforeach
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seller Filter Dropdown -->
+        <div class="flex items-center space-x-2">
+            <label for="seller_id" class="text-sm font-medium text-gray-700">Seller</label>
+            <div class="relative">
+                <select 
+                    name="seller_id" 
+                    id="seller_id"
+                    class="w-48 appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                    <option value="">All Sellers</option>
+                    @foreach($sellers as $seller)
+                        <option value="{{ $seller->id }}" {{ request('seller_id') == $seller->id ? 'selected' : '' }}>{{ $seller->name }}</option>
+                    @endforeach
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Variant Filter Dropdown -->
+        <div class="flex items-center space-x-2">
+            <label for="product_variant_id" class="text-sm font-medium text-gray-700">Product</label>
+            <div class="relative">
+                <select 
+                    name="product_variant_id" 
+                    id="product_variant_id"
+                    class="w-48 appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                    <option value="">All Products</option>
+                    @foreach($productVariants as $variant)
+                        <option value="{{ $variant->id }}" {{ request('product_variant_id') == $variant->id ? 'selected' : '' }}>
+                            {{ $variant->code }} - {{ $variant->product->name ?? '' }}
+                        </option>
+                    @endforeach
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Type Filter Dropdown -->
+        <div class="flex items-center space-x-2">
+            <label for="payment_type" class="text-sm font-medium text-gray-700">Payment Type</label>
+            <div class="relative">
+                <select 
+                    name="payment_type" 
+                    id="payment_type"
+                    class="w-32 appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                    <option value="">All Types</option>
+                    <option value="cash" {{ request('payment_type') == 'cash' ? 'selected' : '' }}>Cash</option>
+                    <option value="installment" {{ request('payment_type') == 'installment' ? 'selected' : '' }}>Installment</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Filter Dropdown -->
+        <div class="flex items-center space-x-2">
+            <label for="status" class="text-sm font-medium text-gray-700">Status</label>
+            <div class="relative">
+                <select 
+                    name="status" 
+                    id="status"
+                    class="w-32 appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                    <option value="">All Status</option>
+                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Date Range Filter - Larger Version -->
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
+                <label for="start_date" class="text-sm font-medium text-gray-700 whitespace-nowrap">From Date</label>
+                <div class="relative">
+                    <input 
+                        type="date" 
+                        name="start_date" 
+                        id="start_date"
+                        value="{{ request('start_date') }}"
+                        class="w-40 px-4 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    >
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <label for="end_date" class="text-sm font-medium text-gray-700 whitespace-nowrap">To Date</label>
+                <div class="relative">
+                    <input 
+                        type="date" 
+                        name="end_date" 
+                        id="end_date"
+                        value="{{ request('end_date') }}"
+                        class="w-40 px-4 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    >
+                </div>
+            </div>
+        </div>
+
+
         <!-- Action Buttons -->
-        <div class="flex justify-end space-x-2 mt-4">
+        <div class="flex space-x-2">
             <button 
                 type="submit" 
                 class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md transition"
             >
-                <i class="fas fa-filter mr-2"></i>Apply Filters
+                Apply
             </button>
             
-            @if(request()->hasAny(['search', 'customer_id', 'product_id', 'seller_id', 'payment_type', 'status']))
-                <a 
-                    href="{{ route('transactions.index') }}" 
-                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition"
-                >
-                    <i class="fas fa-times mr-2"></i>Clear Filters
-                </a>
-            @endif
+            @if(request()->anyFilled(['search', 'customer_id', 'seller_id', 'product_variant_id', 'payment_type', 'status', 'start_date', 'end_date']))
+            <a 
+                href="{{ route('transactions.index') }}" 
+                class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition"
+            >
+                Clear
+            </a>
+        @endif
         </div>
     </form>
 
@@ -137,8 +184,9 @@
                 <tr>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Products</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -149,38 +197,55 @@
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">{{ $transaction->invoice }}</div>
+                        <div class="text-sm text-gray-500">{{ $transaction->created_at->format('d M Y') }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-900">{{ $transaction->customer->name }}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">{{ $transaction->productVariant->code }} - {{ $transaction->productVariant->product->name }}</div>
+                        <div class="text-sm text-gray-500">{{ \Illuminate\Support\Str::limit($transaction->customer->address, 10) }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-900">{{ $transaction->seller->name }}</div>
                     </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900">
+                            @foreach($transaction->items as $item)
+                                <div>
+                                    {{ $item->quantity }}x {{ $item->productVariant->product->name ?? '' }} ({{ $item->productVariant->code }})
+                                </div>
+                            @endforeach
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ number_format($transaction->deal_price, 2) }}</div>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            {{ $transaction->payment_type === 'credit' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800' }}">
+                            {{ $transaction->payment_type == 'cash' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
                             {{ ucfirst($transaction->payment_type) }}
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            {{ $transaction->status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
+                            {{ $transaction->status == 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                             {{ ucfirst($transaction->status) }}
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                         @if($transaction->payment_type === 'installment')
+                            <button type="button" onclick="openPaymentModal('{{ $transaction->id }}')" class="text-green-600 hover:text-green-900 mr-3" title="Pay Installment">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </button>
+                        @endif
                         <a href="{{ route('transactions.show', $transaction->id) }}" class="text-blue-600 hover:text-blue-900 mr-3">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <button onclick='editTransaction(@json($transaction))' class="text-primary-600 hover:text-primary-900 mr-3">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick='deleteTransaction(@json($transaction))' class="text-red-600 hover:text-red-900">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <form action="{{ route('transactions.destroy', $transaction->id) }}" method="POST" class="inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="button" onclick="confirmDelete('{{ $transaction->id }}', '{{ $transaction->invoice }}')" class="text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
                     </td>
                 </tr>
                 @endforeach
@@ -188,304 +253,150 @@
         </table>
     </div>
 
-    <!-- Pagination -->
+    <!-- Pagination Info and Navigation -->
     <div class="mt-4">
         {{ $transactions->links() }}
     </div>
+</div>
 
-    <!-- Create Transaction Modal -->
-    <div id="createTransactionModal" class="{{ $errors->any() ? '' : 'hidden' }} fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-            <div class="flex justify-between items-center pb-3">
-                <h3 class="text-lg font-bold text-primary-800">Create New Transaction</h3>
-                <button onclick="closeModal('createTransactionModal')" class="text-gray-400 hover:text-gray-500">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <form id="createTransactionForm" method="POST" action="{{ route('transactions.store') }}">
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Invoice -->
-                    <div class="col-span-1">
-                        <label for="invoice" class="block text-sm font-medium text-gray-700">Invoice Number</label>
-                        <input type="text" name="invoice" id="invoice" value="{{ old('invoice') }}"
-                            class="mt-1 block w-full border {{ $errors->has('invoice') ? 'border-red-500' : 'border-gray-300' }} 
-                                rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                        @error('invoice')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Customer -->
-                    <div class="col-span-1">
-                        <label for="customer_id" class="block text-sm font-medium text-gray-700">Customer</label>
-                        <select name="customer_id" id="customer_id"
-                            class="mt-1 block w-full border {{ $errors->has('customer_id') ? 'border-red-500' : 'border-gray-300' }} 
-                                rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="">-- Select Customer --</option>
-                            @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
-                                    {{ $customer->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('customer_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Product Variant -->
-                    <div class="col-span-1">
-                        <label for="product_variant_id" class="block text-sm font-medium text-gray-700">Product Variant</label>
-                        <select name="product_variant_id" id="product_variant_id"
-                            class="mt-1 block w-full border {{ $errors->has('product_variant_id') ? 'border-red-500' : 'border-gray-300' }} 
-                                rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="">-- Select Product Variant --</option>
-                            @foreach($productVariants as $variant)
-                                <option value="{{ $variant->id }}" {{ old('product_variant_id') == $variant->id ? 'selected' : '' }}>
-                                    {{ $variant->code }} ({{ $variant->product->name ?? '' }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('product_variant_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Seller -->
-                    <div class="col-span-1">
-                        <label for="seller_id" class="block text-sm font-medium text-gray-700">Seller</label>
-                        <select name="seller_id" id="seller_id"
-                            class="mt-1 block w-full border {{ $errors->has('seller_id') ? 'border-red-500' : 'border-gray-300' }} 
-                                rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="">-- Select Seller --</option>
-                            @foreach($sellers as $seller)
-                                <option value="{{ $seller->id }}" {{ old('seller_id') == $seller->id ? 'selected' : '' }}>
-                                    {{ $seller->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('seller_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Payment Type -->
-                    <div class="col-span-1">
-                        <label for="payment_type" class="block text-sm font-medium text-gray-700">Payment Type</label>
-                        <select name="payment_type" id="payment_type"
-                            class="mt-1 block w-full border {{ $errors->has('payment_type') ? 'border-red-500' : 'border-gray-300' }} 
-                                rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="">-- Select Payment Type --</option>
-                            <option value="credit" {{ old('payment_type') == 'credit' ? 'selected' : '' }}>Credit</option>
-                            <option value="cash" {{ old('payment_type') == 'cash' ? 'selected' : '' }}>Cash</option>
-                        </select>
-                        @error('payment_type')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Status -->
-                    <div class="col-span-1">
-                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                        <select name="status" id="status"
-                            class="mt-1 block w-full border {{ $errors->has('status') ? 'border-red-500' : 'border-gray-300' }} 
-                                rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="">-- Select Status --</option>
-                            <option value="paid" {{ old('status') == 'paid' ? 'selected' : '' }}>Paid</option>
-                            <option value="installment" {{ old('status') == 'installment' ? 'selected' : '' }}>Installment</option>
-                        </select>
-                        @error('status')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Installment Amount (conditional) -->
-                    <div id="installmentAmountField" class="col-span-1 hidden">
-                        <label for="installment_amount" class="block text-sm font-medium text-gray-700">Installment Amount</label>
-                        <input type="number" name="installment_amount" id="installment_amount" value="{{ old('installment_amount') }}"
-                            class="mt-1 block w-full border {{ $errors->has('installment_amount') ? 'border-red-500' : 'border-gray-300' }} 
-                                rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                        @error('installment_amount')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Transaction Items -->
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700">Items</label>
-                        <div id="transactionItemsContainer" class="mt-2 space-y-2">
-                            <!-- Items will be added here dynamically -->
-                        </div>
-                        <button type="button" onclick="addTransactionItem()" class="mt-2 inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                            <i class="fas fa-plus mr-1"></i> Add Item
-                        </button>
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-3 pt-5">
-                    <button type="button" onclick="closeModal('createTransactionModal')"
-                        class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                        Save Transaction
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Transaction Modal -->
-    <div id="editTransactionModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-            <div class="flex justify-between items-center pb-3">
-                <h3 class="text-lg font-bold text-primary-800">Edit Transaction</h3>
-                <button onclick="closeModal('editTransactionModal')" class="text-gray-400 hover:text-gray-500">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <form id="editTransactionForm" method="POST" action="">
-                @csrf
-                @method('PUT')
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Invoice -->
-                    <div class="col-span-1">
-                        <label for="edit_invoice" class="block text-sm font-medium text-gray-700">Invoice Number</label>
-                        <input type="text" name="invoice" id="edit_invoice"
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                    </div>
-
-                    <!-- Customer -->
-                    <div class="col-span-1">
-                        <label for="edit_customer_id" class="block text-sm font-medium text-gray-700">Customer</label>
-                        <select name="customer_id" id="edit_customer_id"
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="">-- Select Customer --</option>
-                            @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}">{{ $customer->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Product -->
-                    <div class="col-span-1">
-                        <label for="edit_product_id" class="block text-sm font-medium text-gray-700">Product</label>
-                        <select name="product_id" id="edit_product_id"
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="">-- Select Product --</option>
-                            @foreach($productVariants as $variant)
-                                <option value="{{ $variant->id }}">{{ $variant->code }} ({{ $variant->product->name ?? '' }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Seller -->
-                    <div class="col-span-1">
-                        <label for="edit_seller_id" class="block text-sm font-medium text-gray-700">Seller</label>
-                        <select name="seller_id" id="edit_seller_id"
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="">-- Select Seller --</option>
-                            @foreach($sellers as $seller)
-                                <option value="{{ $seller->id }}">{{ $seller->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Payment Type -->
-                    <div class="col-span-1">
-                        <label for="edit_payment_type" class="block text-sm font-medium text-gray-700">Payment Type</label>
-                        <select name="payment_type" id="edit_payment_type"
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="credit">Credit</option>
-                            <option value="cash">Cash</option>
-                        </select>
-                    </div>
-
-                    <!-- Status -->
-                    <div class="col-span-1">
-                        <label for="edit_status" class="block text-sm font-medium text-gray-700">Status</label>
-                        <select name="status" id="edit_status"
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="paid">Paid</option>
-                            <option value="installment">Installment</option>
-                        </select>
-                    </div>
-
-                    <!-- Installment Amount (conditional) -->
-                    <div id="editInstallmentAmountField" class="col-span-1 hidden">
-                        <label for="edit_installment_amount" class="block text-sm font-medium text-gray-700">Installment Amount</label>
-                        <input type="number" name="installment_amount" id="edit_installment_amount"
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-3 pt-5">
-                    <button type="button" onclick="closeModal('editTransactionModal')"
-                        class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                        Update Transaction
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Delete Transaction Modal -->
-    <div id="deleteTransactionModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmationModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
         <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
             <div class="flex justify-between items-center pb-3">
                 <h3 class="text-lg font-bold text-red-700">Delete Confirmation</h3>
-                <button onclick="closeModal('deleteTransactionModal')" class="text-gray-400 hover:text-gray-500">
+                <button onclick="closeModal('deleteConfirmationModal')" class="text-gray-400 hover:text-gray-500">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <p class="text-gray-800">Are you sure you want to delete transaction <strong id="deleteTransactionInvoice"></strong>?</p>
-            <form id="deleteTransactionForm" method="POST" action="">
+            
+            <div class="flex items-start">
+                <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <i class="fas fa-exclamation-triangle text-red-600"></i>
+                </div>
+                <div class="ml-4">
+                    <h4 class="text-lg font-medium text-gray-900">Delete Transaction</h4>
+                    <p class="text-sm text-gray-500">Are you sure you want to delete transaction <span id="transactionInvoiceToDelete" class="font-semibold"></span>? This action cannot be undone.</p>
+                </div>
+            </div>
+            
+            <form id="deleteForm" method="POST" action="">
                 @csrf
                 @method('DELETE')
                 <div class="flex justify-end pt-5 space-x-3">
-                    <button type="button" onclick="closeModal('deleteTransactionModal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                    <button type="button" onclick="closeModal('deleteConfirmationModal')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-md transition">
                         Cancel
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-                        Delete
+                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition">
+                        Delete Transaction
                     </button>
                 </div>
             </form>
         </div>
     </div>
-</div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center pb-3">
+                <h3 class="text-lg font-bold text-green-700">Pay Installment</h3>
+                <button onclick="closeModal('paymentModal')" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="paymentForm" method="POST" action="">
+                @csrf
+                <div class="mb-4">
+                    <label for="payment_amount" class="block text-sm font-medium text-gray-700">Payment Amount</label>
+                    <input type="number" step="0.01" name="payment_amount" id="payment_amount" 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
+                </div>
+                
+                <!-- Modified Payment Date Section with Today Checkbox -->
+                <div class="mb-4">
+                    <label for="payment_date" class="block text-sm font-medium text-gray-700">Payment Date</label>
+                    <div class="flex items-center space-x-4 mt-1">
+                        <input 
+                            type="date" 
+                            name="payment_date" 
+                            id="payment_date" 
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                        >
+                        <div class="flex items-center">
+                            <input 
+                                type="checkbox" 
+                                id="payment_today_checkbox" 
+                                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                            >
+                            <label for="payment_today_checkbox" class="ml-2 text-sm text-gray-700">Today</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end pt-5 space-x-3">
+                    <button type="button" onclick="closeModal('paymentModal')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-md transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition">
+                        Record Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 <script>
-    // Show/hide installment amount field based on status selection
-    document.getElementById('status').addEventListener('change', function() {
-        const installmentField = document.getElementById('installmentAmountField');
-        if (this.value === 'installment') {
-            installmentField.classList.remove('hidden');
-        } else {
-            installmentField.classList.add('hidden');
-        }
-    });
+    // Function to open payment modal with today's date checkbox functionality
+    function openPaymentModal(transactionId) {
+        // Reset form and set action
+        document.getElementById('paymentForm').action = `/transactions/${transactionId}/pay-installment`;
+        document.getElementById('paymentForm').reset();
+        
+        // Get elements
+        const paymentModal = document.getElementById('paymentModal');
+        const paymentDateInput = document.getElementById('payment_date');
+        const paymentTodayCheckbox = document.getElementById('payment_today_checkbox');
+        
+        // Today checkbox functionality
+        paymentTodayCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                // Set to today's date in YYYY-MM-DD format
+                const today = new Date();
+                const formattedDate = today.toISOString().split('T')[0];
+                paymentDateInput.value = formattedDate;
+            } else {
+                // Clear the date if checkbox is unchecked
+                paymentDateInput.value = '';
+            }
+        });
+        
+        // Show modal
+        paymentModal.classList.remove('hidden');
+        
+        // Clean up event listener when modal is closed
+        const cleanUp = function() {
+            paymentTodayCheckbox.removeEventListener('change', this);
+            paymentModal.removeEventListener('hidden', cleanUp);
+        };
+        paymentModal.addEventListener('hidden', cleanUp);
+    }
 
-    // Edit version of the above
-    document.getElementById('edit_status').addEventListener('change', function() {
-        const installmentField = document.getElementById('editInstallmentAmountField');
-        if (this.value === 'installment') {
-            installmentField.classList.remove('hidden');
-        } else {
-            installmentField.classList.add('hidden');
-        }
-    });
+    // Function to open delete confirmation modal
+    function confirmDelete(transactionId, transactionInvoice) {
+        document.getElementById('transactionInvoiceToDelete').textContent = transactionInvoice;
+        document.getElementById('deleteForm').action = `/transactions/${transactionId}`;
+        openModal('deleteConfirmationModal');
+    }
 
     // Modal functions
+    function closeAllModals() {
+        document.querySelectorAll('[id$="Modal"]').forEach(modal => {
+            modal.classList.add('hidden');
+        });
+    }
+
     function openModal(modalId) {
+        closeAllModals();
         document.getElementById(modalId).classList.remove('hidden');
     }
 
@@ -493,86 +404,53 @@
         document.getElementById(modalId).classList.add('hidden');
     }
 
-    // Edit transaction
-    function editTransaction(transaction) {
-        document.getElementById('editTransactionForm').action = `/transactions/${transaction.id}`;
-        document.getElementById('edit_invoice').value = transaction.invoice;
-        document.getElementById('edit_customer_id').value = transaction.customer_id;
-        document.getElementById('edit_product_id').value = transaction.product_id;
-        document.getElementById('edit_seller_id').value = transaction.seller_id;
-        document.getElementById('edit_payment_type').value = transaction.payment_type;
-        document.getElementById('edit_status').value = transaction.status;
-        
-        // Trigger change event to show/hide installment field
-        document.getElementById('edit_status').dispatchEvent(new Event('change'));
-        
-        if (transaction.status === 'installment' && transaction.installments) {
-            document.getElementById('edit_installment_amount').value = transaction.installments[0].installment_amount;
+    // Date validation
+    document.getElementById('start_date').addEventListener('change', function() {
+        const endDate = document.getElementById('end_date');
+        if (this.value && endDate.value && this.value > endDate.value) {
+            endDate.value = this.value;
         }
-        
-        openModal('editTransactionModal');
-    }
+    });
 
-    // Delete transaction
-    function deleteTransaction(transaction) {
-        document.getElementById('deleteTransactionForm').action = `/transactions/${transaction.id}`;
-        document.getElementById('deleteTransactionInvoice').textContent = transaction.invoice;
-        openModal('deleteTransactionModal');
-    }
-
-    // Transaction items management
-    let itemCounter = 0;
-    
-    let itemCounter = 0;
-
-    function addTransactionItem() {
-        const container = document.getElementById('transactionItemsContainer');
-        const newItem = document.createElement('div');
-        newItem.className = 'flex items-center space-x-2';
-        newItem.innerHTML = `
-            <select name="items[${itemCounter}][product_variant_id]" class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                <option value="">Select Variant</option>
-                @foreach($productVariants as $variant)
-                    <option value="{{ $variant->id }}">{{ $variant->code }} ({{ $variant->product->name ?? '' }})</option>
-                @endforeach
-            </select>
-            <input type="number" name="items[${itemCounter}][quantity]" min="1" value="1" class="w-20 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-            <button type="button" onclick="this.parentNode.remove()" class="text-red-500 hover:text-red-700">
-                <i class="fas fa-trash"></i>
-            </button>
-        `;
-        container.appendChild(newItem);
-        itemCounter++;
-    }
-
-    // Initialize with one item if there are validation errors
-    @if($errors->any() && old('items'))
-        @foreach(old('items') as $key => $item)
-            const container = document.getElementById('transactionItemsContainer');
-            const newItem = document.createElement('div');
-            newItem.className = 'flex items-center space-x-2';
-            newItem.innerHTML = `
-                <select name="items[${key}][product_variant_id]" class="flex-1 border ${ $errors->has("items.${key}.product_variant_id") ? 'border-red-500' : 'border-gray-300' } rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                    <option value="">Select Variant</option>
-                    @foreach($productVariants as $variant)
-                        <option value="{{ $variant->id }}" {{ old("items.${key}.product_variant_id") == $variant->id ? 'selected' : '' }}>
-                            {{ $variant->code }} ({{ $variant->product->name ?? '' }})
-                        </option>
-                    @endforeach
-                </select>
-                <input type="number" name="items[${key}][quantity]" min="1" value="{{ $item['quantity'] }}" class="w-20 border ${ $errors->has("items.${key}.quantity") ? 'border-red-500' : 'border-gray-300' } rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                <button type="button" onclick="this.parentNode.remove()" class="text-red-500 hover:text-red-700">
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-            container.appendChild(newItem);
-            itemCounter++;
-        @endforeach
-    @else
-        // Add one empty item by default when opening create modal
-        document.addEventListener('DOMContentLoaded', function() {
-            addTransactionItem();
-        });
-    @endif
+    document.getElementById('end_date').addEventListener('change', function() {
+        const startDate = document.getElementById('start_date');
+        if (this.value && startDate.value && this.value < startDate.value) {
+            startDate.value = this.value;
+        }
+    });
 </script>
+
+@if (session('error'))
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: '{{ session('error') }}',
+            confirmButtonColor: '#d33',
+        });
+    });
+</script>
+@endif
+
+@if (session('success'))
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+        });
+
+        Toast.fire({
+            icon: 'success',
+            title: '{{ session('success') }}'
+        });
+    });
+</script>
+@endif
 @endsection

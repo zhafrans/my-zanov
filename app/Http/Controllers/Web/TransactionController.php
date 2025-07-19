@@ -4,27 +4,30 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
-use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Transaction;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class TransactionController extends Controller
 {
     public function index(Request $request)
     {
-        $transactions = Transaction::with(['customer:id,name', 'seller:id,name', 'productVariant:id,code,product_id', 'productVariant.product:id,name',])
+        $transactions = Transaction::with([
+                'customer:id,name,address',
+                'seller:id,name',
+                'items',
+                'items.productVariant:id,code,product_id',
+                'items.productVariant.product:id,name'
+            ])
             ->when($request->search, function($query) use ($request) {
                 $query->where('invoice', 'like', '%' . $request->search . '%');
             })
             ->when($request->customer_id, function($query) use ($request) {
                 $query->where('customer_id', $request->customer_id);
-            })
-            ->when($request->product_variant_id, function($query) use ($request) { // Changed from product_id
-                $query->where('product_variant_id', $request->product_variant_id);
             })
             ->when($request->seller_id, function($query) use ($request) {
                 $query->where('seller_id', $request->seller_id);
@@ -35,14 +38,24 @@ class TransactionController extends Controller
             ->when($request->status, function($query) use ($request) {
                 $query->where('status', $request->status);
             })
+            ->when($request->product_variant_id, function($query) use ($request) {
+                $query->whereHas('items', function($q) use ($request) {
+                    $q->where('product_variant_id', $request->product_variant_id);
+                });
+            })
+            ->when($request->start_date, function($query) use ($request) {
+            $query->whereDate('transaction_date', '>=', $request->start_date);
+            })
+            ->when($request->end_date, function($query) use ($request) {
+                $query->whereDate('transaction_date', '<=', $request->end_date);
+            })
             ->orderByDesc('id')
             ->paginate(10)
             ->appends($request->query());
 
         $customers = Customer::orderBy('name')->get(['id', 'name']);
-        $productVariants = ProductVariant::with('product')->orderBy('code')->get(['id', 'code', 'product_id']); // Changed from products
+        $productVariants = ProductVariant::with('product')->orderBy('code')->get(['id', 'code', 'product_id']);
         
-        // Get SALES role users
         $sellerRole = DB::table('user_roles')->where('code', 'SALES')->first();
         $sellers = User::where('role_id', $sellerRole->id)
                     ->orderBy('name')
@@ -51,165 +64,218 @@ class TransactionController extends Controller
         return view('transactions.index', compact(
             'transactions',
             'customers',
-            'productVariants', // Changed from products
+            'productVariants',
             'sellers'
         ));
     }
 
+    public function create()
+    {
+        $customers = Customer::orderBy('name')->get(['id', 'name']);
+        $products = ProductVariant::with('product')->orderBy('code')->get(['id', 'code', 'product_id']);
+
+        $sellerRole = DB::table('user_roles')->where('code', 'SALES')->first();
+        $sellers = User::where('role_id', $sellerRole->id)
+                    ->orderBy('name')
+                    ->get(['id', 'name']);
+
+        return view('transactions.create', compact('customers', 'products', 'sellers'));
+    }
+
     public function store(Request $request)
     {
-        $request->validate([
+        $items = [];
+        foreach ($request->items as $key => $item) {
+            if (is_array($item) && isset($item['product_variant_id']) && isset($item['quantity'])) {
+                $items[] = [
+                    'product_variant_id' => $item['product_variant_id'],
+                    'quantity' => $item['quantity']
+                ];
+            }
+        }
+        $request->merge(['items' => $items]);
+
+        // Validate request
+        $validator = Validator::make($request->all(), [
             'invoice' => 'required|string|max:50|unique:transactions',
+            'deal_price' => 'required|numeric|min:0',
             'customer_id' => 'required|exists:customers,id',
-            'product_id' => 'required|exists:products,id',
             'seller_id' => 'required|exists:users,id',
-            'payment_type' => 'required|in:credit,cash',
-            'status' => 'required|in:paid,installment',
-            'items' => 'required|array',
+            'payment_type' => 'required|in:installment,cash',
+            'transaction_date' => 'required|date',
+            'is_dp' => 'nullable|string',
+            'dp_amount' => 'required_if:is_dp,1|nullable|string',
+            'items' => 'required|array|min:1',
             'items.*.product_variant_id' => 'required|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'installment_amount' => 'required_if:status,installment|numeric|min:0',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         DB::beginTransaction();
 
         try {
+            // Automatically set status based on payment type
+            $status = $request->payment_type === 'cash' ? 'paid' : 'pending';
+
             // Create transaction
             $transaction = Transaction::create([
                 'invoice' => $request->invoice,
+                'deal_price' => $request->deal_price,
                 'customer_id' => $request->customer_id,
-                'product_id' => $request->product_id,
                 'seller_id' => $request->seller_id,
                 'payment_type' => $request->payment_type,
-                'status' => $request->status,
+                'transaction_date' => $request->transaction_date,
+                'status' => $status,
             ]);
 
             // Create transaction items
             foreach ($request->items as $item) {
                 $variant = ProductVariant::find($item['product_variant_id']);
                 
+                if (!$variant) {
+                    throw new Exception("Product variant not found: ".$item['product_variant_id']);
+                }
+
                 $transaction->items()->create([
                     'product_variant_id' => $item['product_variant_id'],
                     'quantity' => $item['quantity'],
-                    'snapshot_name' => $variant->name,
-                    'snapshot_price' => $variant->price,
+                    'snapshot_name' => $variant->code,
+                    'snapshot_price' => $request->deal_price,
                 ]);
             }
 
-            // If installment, create installment record
-            if ($request->status === 'installment') {
+            // If credit payment, create installment and outstanding records
+            if ($request->payment_type === 'installment') {
+                $transaction->outstanding()->create([
+                    'outstanding_amount' => $request->deal_price,
+                ]);
+            }
+
+            if ($request->is_dp) {
                 $transaction->installments()->create([
-                    'installment_amount' => $request->installment_amount,
+                    'installment_amount' => $request->dp_amount,
+                    'payment_date' => $request->transaction_date,
                 ]);
 
-                $transaction->outstanding()->create([
-                    'outstanding_amount' => $request->installment_amount,
+                $transaction->outstanding()->update([
+                    'outstanding_amount' => $request->deal_price - $request->dp_amount
                 ]);
             }
 
             DB::commit();
+
             return redirect()->route('transactions.index')->with('success', 'Transaction created successfully');
+
         } catch (Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Failed to create transaction: '.$e->getMessage());
-        }
-    }
-
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'invoice' => 'required|string|max:50|unique:transactions,invoice,'.$id,
-            'customer_id' => 'required|exists:customers,id',
-            'product_id' => 'required|exists:products,id',
-            'seller_id' => 'required|exists:users,id',
-            'payment_type' => 'required|in:credit,cash',
-            'status' => 'required|in:paid,installment',
-            'installment_amount' => 'required_if:status,installment|numeric|min:0',
-        ]);
-
-        $transaction = Transaction::findOrFail($id);
-
-        DB::beginTransaction();
-
-        try {
-            $transaction->update([
-                'invoice' => $request->invoice,
-                'customer_id' => $request->customer_id,
-                'product_id' => $request->product_id,
-                'seller_id' => $request->seller_id,
-                'payment_type' => $request->payment_type,
-                'status' => $request->status,
+            \Log::error('Transaction failed: '.$e->getMessage(), [
+                'exception' => $e->getTraceAsString()
             ]);
-
-            // Update installment if status is installment
-            if ($request->status === 'installment') {
-                if ($transaction->installments()->exists()) {
-                    $transaction->installments()->update([
-                        'installment_amount' => $request->installment_amount,
-                    ]);
-                } else {
-                    $transaction->installments()->create([
-                        'installment_amount' => $request->installment_amount,
-                    ]);
-                }
-
-                if ($transaction->outstanding()->exists()) {
-                    $transaction->outstanding()->update([
-                        'outstanding_amount' => $request->installment_amount,
-                    ]);
-                } else {
-                    $transaction->outstanding()->create([
-                        'outstanding_amount' => $request->installment_amount,
-                    ]);
-                }
-            } else {
-                // If status changed to paid, delete installment and outstanding records
-                $transaction->installments()->delete();
-                $transaction->outstanding()->delete();
-            }
-
-            DB::commit();
-            return redirect()->route('transactions.index')->with('success', 'Transaction updated successfully');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withInput()->with('error', 'Failed to update transaction: '.$e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to create transaction: '.$e->getMessage()
+            ], 500);
         }
     }
-
+    
     public function show($id)
     {
         $transaction = Transaction::with([
-            'customer', 
-            'seller', 
-            'items.variant', 
+            'customer',
+            'customer.village:id,name',
+            'customer.subdistrict:id,name',
+            'customer.city:id,name',
+            'customer.province:id,name',
+            'seller:id,name',
+            'seller.vehicle:id,name,seller_id',
+            'items.productVariant.product',
             'installments',
-            'outstanding',
-            'productVariant.product'
+            'outstanding'
         ])->findOrFail($id);
-        
+
         return view('transactions.show', compact('transaction'));
     }
-    
+
     public function destroy($id)
     {
         DB::beginTransaction();
-        
+
         try {
             $transaction = Transaction::findOrFail($id);
             
-            // Delete related records first
+            // Delete related records
             $transaction->items()->delete();
             $transaction->installments()->delete();
             $transaction->outstanding()->delete();
             
-            // Then delete the transaction
+            // Delete the transaction
             $transaction->delete();
-            
+
             DB::commit();
             return redirect()->route('transactions.index')->with('success', 'Transaction deleted successfully');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to delete transaction: '.$e->getMessage());
+        }
+    }
+
+    // Add this method to TransactionController
+    public function payInstallment(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'payment_amount' => 'required|numeric|min:1',
+            'payment_date' => 'required|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $transaction = Transaction::findOrFail($id);
+            
+            // Check if payment amount is valid
+            $outstanding = $transaction->outstanding;
+            if ($request->payment_amount > $outstanding->outstanding_amount) {
+                throw new Exception("Payment amount cannot be greater than outstanding amount");
+            }
+
+            // Update outstanding amount
+            $outstanding->outstanding_amount -= $request->payment_amount;
+            $outstanding->save();
+
+
+            // Create installment payment record
+            $transaction->installments()->create([
+                'installment_amount' => $request->payment_amount,
+                'payment_date' => $request->payment_date,
+            ]);
+
+            // Update transaction status if fully paid
+            if ($outstanding->outstanding_amount == 0) {
+                $transaction->status = 'paid';
+                $transaction->save();
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Installment payment recorded successfully');
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to record payment: '.$e->getMessage());
         }
     }
 }

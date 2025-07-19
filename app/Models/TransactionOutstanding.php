@@ -9,10 +9,7 @@ class TransactionOutstanding extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'transaction_id',
-        'outstanding_amount'
-    ];
+    protected $guarded = [];
 
     public function transaction()
     {
