@@ -25,6 +25,9 @@ class ProductVariantController extends Controller
             ->when($request->search && $request->search_type == 'base_code', function($query) use ($request) {
                 $query->where('base_code', 'like', '%' . $request->search . '%');
             })
+            ->when($request->search && $request->search_type == 'other_code', function($query) use ($request) {
+                $query->where('other_code', 'like', '%' . $request->search . '%');
+            })
             ->when($request->product_id, function($query) use ($request) {
                 $query->where('product_id', $request->product_id);
             })
@@ -36,6 +39,9 @@ class ProductVariantController extends Controller
             })
             ->when($request->heel_id, function($query) use ($request) {
                 $query->where('heel_id', $request->heel_id);
+            })
+            ->when($request->gender, function($query) use ($request) {
+                $query->where('gender', $request->gender);
             })
             ->when($request->sort_by && $request->sort_direction, function($query) use ($request) {
                 $query->orderBy($request->sort_by, $request->sort_direction);
@@ -60,7 +66,9 @@ class ProductVariantController extends Controller
             'color_id' => 'required|exists:colors,id',
             'size_id' => 'required|exists:sizes,id',
             'heel_id' => 'required|exists:heels,id',
+            'other_code' => 'nullable|string',
             'price' => 'required|numeric|min:0',
+            'gender' => 'required|in:man,woman,unisex',
             'installment_price' => 'required|numeric|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg',
         ]);
@@ -108,6 +116,8 @@ class ProductVariantController extends Controller
                 'color_id' => $color->id,
                 'size_id' => $size->id,
                 'heel_id' => $heel->id,
+                'other_code' => $request->other_code,
+                'gender' => $request->gender,
                 'image' => $imagePath ?? 'default.jpg',
                 'price' => $request->price,
                 'installment_price' => $request->installment_price,
@@ -126,7 +136,7 @@ class ProductVariantController extends Controller
         $request->validate([
             'price' => 'required|numeric|min:0',
             'installment_price' => 'required|numeric|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg',
         ]);
 
         $variant = ProductVariant::findOrFail($id);

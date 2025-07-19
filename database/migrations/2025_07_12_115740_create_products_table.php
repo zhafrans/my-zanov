@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->string('code')->unique();
             $table->string('name');
-            $table->enum('gender', ['man', 'woman', 'unisex']);
             $table->timestamps();
         });
     }

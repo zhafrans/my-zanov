@@ -22,6 +22,7 @@
                     >
                         <option value="code" {{ request('search_type', 'code') == 'code' ? 'selected' : '' }}>Code</option>
                         <option value="base_code" {{ request('search_type') == 'base_code' ? 'selected' : '' }}>Base Code</option>
+                        <option value="other_code" {{ request('search_type') == 'other_code' ? 'selected' : '' }}>Other Code</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                         <i class="fas fa-chevron-down"></i>
@@ -102,6 +103,21 @@
                 </select>
             </div>
 
+            <!-- Gender Filter -->
+            <div class="min-w-[200px]">
+                <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                <select 
+                    name="gender" 
+                    id="gender"
+                    class="w-full appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                    <option value="">All Genders</option>
+                    <option value="man" {{ request('gender') == 'man' ? 'selected' : '' }}>Man</option>
+                    <option value="woman" {{ request('gender') == 'woman' ? 'selected' : '' }}>Woman</option>
+                    <option value="unisex" {{ request('gender') == 'unisex' ? 'selected' : '' }}>Unisex</option>
+                </select>
+            </div>
+
             <!-- Action Buttons -->
             <div class="flex space-x-2">
                 <button 
@@ -111,7 +127,7 @@
                     Apply
                 </button>
                 
-                @if(request()->has('search') || request()->has('product_id') || request()->has('color_id') || request()->has('size_id') || request()->has('heel_id') || request()->has('sort_by'))
+                @if(request()->has('search') || request()->has('product_id') || request()->has('color_id') || request()->has('size_id') || request()->has('heel_id') || request()->has('gender'))
                     <a 
                         href="{{ route('product-variants.index') }}" 
                         class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition h-[42px] flex items-center"
@@ -131,10 +147,12 @@
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base Code</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Other Code</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Heel</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -160,6 +178,9 @@
                         <div class="text-sm font-medium text-gray-900">{{ $variant->code }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ $variant->other_code ?? '-' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-900">{{ $variant->product->name }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -170,6 +191,17 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-900">{{ $variant->heel->name }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">
+                            @if($variant->gender == 'man')
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Man</span>
+                            @elseif($variant->gender == 'woman')
+                                <span class="px-2 py-1 bg-pink-100 text-pink-800 rounded-full text-xs">Woman</span>
+                            @else
+                                <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Unisex</span>
+                            @endif
+                        </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-900">Rp {{ number_format($variant->price, 0, ',', '.') }}</div>
@@ -191,14 +223,14 @@
         </table>
     </div>
 
-    <!-- Pagination Info and Navigation -->
+    <!-- Pagination -->
     <div class="mt-4">
         {{ $variants->links() }}
     </div>
 
     <!-- Create Variant Modal -->
     <div id="createVariantModal" class="{{ $errors->any() ? '' : 'hidden' }} fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center pb-3">
                 <h3 class="text-lg font-bold text-primary-800">Create New Product Variant</h3>
                 <button onclick="closeModal('createVariantModal')" class="text-gray-400 hover:text-gray-500">
@@ -273,6 +305,33 @@
                         @enderror
                     </div>
 
+                    <!-- Gender -->
+                    <div>
+                        <label for="gender" class="block text-sm font-medium text-gray-700">Gender *</label>
+                        <select name="gender" id="gender" required
+                            class="mt-1 block w-full border {{ $errors->has('gender') ? 'border-red-500' : 'border-gray-300' }} 
+                                rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="">-- Select Gender --</option>
+                            <option value="man" {{ old('gender') == 'man' ? 'selected' : '' }}>Man</option>
+                            <option value="woman" {{ old('gender') == 'woman' ? 'selected' : '' }}>Woman</option>
+                            <option value="unisex" {{ old('gender') == 'unisex' ? 'selected' : '' }}>Unisex</option>
+                        </select>
+                        @error('gender')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Other Code -->
+                    <div>
+                        <label for="other_code" class="block text-sm font-medium text-gray-700">Other Code</label>
+                        <input type="text" name="other_code" id="other_code" value="{{ old('other_code') }}"
+                            class="mt-1 block w-full border {{ $errors->has('other_code') ? 'border-red-500' : 'border-gray-300' }} 
+                                rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        @error('other_code')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Price -->
                     <div>
                         <label for="price" class="block text-sm font-medium text-gray-700">Price *</label>
@@ -323,7 +382,7 @@
 
     <!-- Show Variant Modal -->
     <div id="showVariantModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center pb-3">
                 <h3 class="text-lg font-bold text-primary-800">Variant Details</h3>
                 <button onclick="closeModal('showVariantModal')" class="text-gray-400 hover:text-gray-500">
@@ -397,34 +456,9 @@
         </div>
     </div>
 
-    <!-- Delete Variant Modal -->
-    <div id="deleteVariantModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
-            <div class="flex justify-between items-center pb-3">
-                <h3 class="text-lg font-bold text-red-700">Delete Confirmation</h3>
-                <button onclick="closeModal('deleteVariantModal')" class="text-gray-400 hover:text-gray-500">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <p class="text-gray-800">Are you sure you want to delete variant <strong id="deleteVariantCode"></strong>?</p>
-            <form id="deleteVariantForm" method="POST" action="">
-                @csrf
-                @method('DELETE')
-                <div class="flex justify-end pt-5 space-x-3">
-                    <button type="button" onclick="closeModal('deleteVariantModal')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-sm rounded-md">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md">
-                        Yes, Delete
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Edit Variant Modal -->
     <div id="editVariantModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center pb-3">
                 <h3 class="text-lg font-bold text-primary-800">Edit Variant</h3>
                 <button onclick="closeModal('editVariantModal')" class="text-gray-400 hover:text-gray-500">
@@ -479,9 +513,57 @@
             </form>
         </div>
     </div>
+
+    <!-- Delete Variant Modal -->
+    <div id="deleteVariantModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center pb-3">
+                <h3 class="text-lg font-bold text-red-700">Delete Confirmation</h3>
+                <button onclick="closeModal('deleteVariantModal')" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p class="text-gray-800">Are you sure you want to delete variant <strong id="deleteVariantCode"></strong>?</p>
+            <form id="deleteVariantForm" method="POST" action="">
+                @csrf
+                @method('DELETE')
+                <div class="flex justify-end pt-5 space-x-3">
+                    <button type="button" onclick="closeModal('deleteVariantModal')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-sm rounded-md">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md">
+                        Yes, Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
+    // Function to show variant details
+    function showVariant(variant) {
+        // Populate the modal with variant data
+        document.getElementById('show_code').textContent = variant.code;
+        document.getElementById('show_base_code').querySelector('span').textContent = variant.base_code;
+        document.getElementById('show_product').textContent = variant.product.name;
+        document.getElementById('show_color').textContent = variant.color.name;
+        document.getElementById('show_size').textContent = variant.size.name;
+        document.getElementById('show_heel').textContent = variant.heel.name;
+        document.getElementById('show_price').textContent = 'Rp ' + variant.price.toLocaleString('id-ID');
+        document.getElementById('show_installment_price').textContent = 'Rp ' + variant.installment_price.toLocaleString('id-ID');
+        document.getElementById('show_created_at').textContent = new Date(variant.created_at).toLocaleString();
+        document.getElementById('show_updated_at').textContent = new Date(variant.updated_at).toLocaleString();
+        
+        // Set image
+        const imageUrl = variant.image ? `/storage/${variant.image}` : '/images/default.jpg';
+        document.getElementById('show_image').src = imageUrl;
+        
+        // Open the modal
+        openModal('showVariantModal');
+    }
+
+    // Function to edit variant
     function editVariant(variant) {
         // Set form action URL
         document.getElementById('editVariantForm').action = `/product-variants/${variant.id}`;
@@ -494,35 +576,18 @@
         const imageUrl = variant.image ? `/storage/${variant.image}` : '/images/default.jpg';
         document.getElementById('current_image').src = imageUrl;
         
+        // Open the modal
         openModal('editVariantModal');
     }
 
+    // Function to delete variant
     function deleteVariant(variant) {
         document.getElementById('deleteVariantCode').textContent = variant.code;
         document.getElementById('deleteVariantForm').action = `/product-variants/${variant.id}`;
         openModal('deleteVariantModal');
     }
 
-    function showVariant(variant) {
-        document.getElementById('show_code').textContent = variant.code;
-        document.getElementById('show_base_code').textContent = variant.base_code;
-        document.getElementById('show_product').textContent = variant.product.name;
-        document.getElementById('show_color').textContent = variant.color.name;
-        document.getElementById('show_size').textContent = variant.size.name;
-        document.getElementById('show_heel').textContent = variant.heel.name;
-        document.getElementById('show_price').textContent = 'Rp ' + variant.price.toLocaleString('id-ID');
-        document.getElementById('show_installment_price').textContent = 'Rp ' + variant.installment_price.toLocaleString('id-ID');
-        document.getElementById('show_created_at').textContent = new Date(variant.created_at).toLocaleString();
-        document.getElementById('show_updated_at').textContent = new Date(variant.updated_at).toLocaleString();
-        
-        const imageUrl = variant.image ? `/storage/${variant.image}` : '/images/default.jpg';
-        console.log(imageUrl);
-        document.getElementById('show_image').src = imageUrl;
-        
-        openModal('showVariantModal');
-    }
-
-    // Modal functions
+    // Modal control functions
     function closeAllModals() {
         document.querySelectorAll('[id$="Modal"]').forEach(modal => {
             modal.classList.add('hidden');
@@ -532,12 +597,29 @@
     function openModal(modalId) {
         closeAllModals();
         document.getElementById(modalId).classList.remove('hidden');
+        
+        // Add click event to backdrop to close modal
+        document.addEventListener('click', function backdropClick(event) {
+            if (event.target.id === modalId) {
+                closeModal(modalId);
+                document.removeEventListener('click', backdropClick);
+            }
+        });
+        
+        // Prevent clicks inside modal content from closing the modal
+        const modalContent = document.querySelector(`#${modalId} > div`);
+        if (modalContent) {
+            modalContent.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
     }
 
     function closeModal(modalId) {
         document.getElementById(modalId).classList.add('hidden');
     }
 
+    // Function to generate initials avatar
     function generateInitials(code) {
         // Get the first 2 characters of the code
         const initials = code.substring(0, 2).toUpperCase();
