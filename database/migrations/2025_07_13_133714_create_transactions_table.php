@@ -17,6 +17,9 @@ return new class extends Migration
             $table->enum('payment_type', ['installment', 'cash']);
             $table->enum('status', ['paid', 'pending']);
             $table->date('transaction_date'); 
+            $table->string('is_tempo')->nullable(); 
+            $table->date('tempo_at')->nullable(); 
+            $table->text('note')->nullable(); 
             $table->timestamps();
         });
     }

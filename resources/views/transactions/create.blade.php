@@ -191,6 +191,36 @@
                 @enderror
             </div>
 
+            <!-- Tempo Option -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Payment Terms</label>
+                <div class="flex space-x-4">
+                    <label class="inline-flex items-center">
+                        <input 
+                            type="radio" 
+                            name="is_tempo" 
+                            value="0" 
+                            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 tempo-radio"
+                            {{ old('is_tempo', '0') == '0' ? 'checked' : '' }}
+                        >
+                        <span class="ml-2 text-gray-700">Regular</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input 
+                            type="radio" 
+                            name="is_tempo" 
+                            value="1" 
+                            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 tempo-radio"
+                            {{ old('is_tempo') == '1' ? 'checked' : '' }}
+                        >
+                        <span class="ml-2 text-gray-700">Tempo (1 Month)</span>
+                    </label>
+                </div>
+                @error('is_tempo')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
             <!-- DP Section - Only shown when payment type is installment -->
             <div id="dpSection" class="mb-6 hidden">
                 <div class="flex items-center mb-2">

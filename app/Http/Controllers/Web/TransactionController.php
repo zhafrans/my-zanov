@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\ProductVariant;
 use App\Models\Transaction;
 use App\Models\User;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -105,6 +106,7 @@ class TransactionController extends Controller
             'transaction_date' => 'required|date',
             'is_dp' => 'nullable|string',
             'dp_amount' => 'required_if:is_dp,1|nullable|string',
+            'is_tempo' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_variant_id' => 'required|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -121,7 +123,11 @@ class TransactionController extends Controller
 
         try {
             // Automatically set status based on payment type
-            $status = $request->payment_type === 'cash' ? 'paid' : 'pending';
+           if ($request->payment_type === 'cash') {
+                $status = $request->is_tempo ? 'pending' : 'paid';
+            } else {
+                $status = 'pending';
+            }
 
             // Create transaction
             $transaction = Transaction::create([
@@ -131,8 +137,21 @@ class TransactionController extends Controller
                 'seller_id' => $request->seller_id,
                 'payment_type' => $request->payment_type,
                 'transaction_date' => $request->transaction_date,
+                'is_tempo' => $request->is_tempo,
                 'status' => $status,
             ]);
+            
+            if ($request->is_tempo) {
+                $tempoAt = Carbon::parse($request->transaction_date)->addMonth();
+
+                $transaction->outstanding()->create([
+                    'outstanding_amount' => $request->deal_price,
+                ]);
+
+                $transaction->update([
+                    'tempo_at' => $tempoAt,
+                ]);
+            }
 
             // Create transaction items
             foreach ($request->items as $item) {

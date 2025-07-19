@@ -28,6 +28,11 @@
                         {{ $transaction->payment_type == 'cash' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
                         {{ ucfirst($transaction->payment_type) }}
                     </span>
+                     @if($transaction->is_tempo == 1)
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                            Cash Tempo
+                        </span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -73,7 +78,7 @@
             @endif
         </div>
 
-        @if($transaction->payment_type == 'installment')
+        @if($transaction->payment_type == 'installment' || $transaction->is_tempo)
         <div class="px-6 py-4 border-t border-gray-200">
             <h4 class="text-sm font-medium text-gray-500 mb-3">Installment Information</h4>
             

@@ -200,9 +200,14 @@
                         <div class="text-sm text-gray-500">{{ $transaction->created_at->format('d M Y') }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">{{ $transaction->customer->name }}</div>
+                        <div class="text-sm text-primary-700 font-medium hover:underline">
+                            <a href="{{ route('transactions.show', $transaction->id) }}">
+                                {{ $transaction->customer->name }}
+                            </a>
+                        </div>
                         <div class="text-sm text-gray-500">{{ \Illuminate\Support\Str::limit($transaction->customer->address, 10) }}</div>
                     </td>
+
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-900">{{ $transaction->seller->name }}</div>
                     </td>
@@ -217,6 +222,14 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-900">{{ number_format($transaction->deal_price, 2) }}</div>
+                        @if($transaction->is_tempo && $transaction->status !== 'paid')
+                            @php
+                                $isOverdue = \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($transaction->tempo_at));
+                            @endphp
+
+                            <i class="fas fa-clock {{ $isOverdue ? 'text-red-500' : 'text-yellow-500' }} mr-2"></i>
+                            <span>{{ \Carbon\Carbon::parse($transaction->tempo_at)->format('d-m-Y') }}</span>
+                        @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -231,7 +244,7 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                         @if($transaction->payment_type === 'installment')
+                        @if(($transaction->payment_type === 'installment' || $transaction->is_tempo) && $transaction->status !== 'paid')
                             <button type="button" onclick="openPaymentModal('{{ $transaction->id }}')" class="text-green-600 hover:text-green-900 mr-3" title="Pay Installment">
                                 <i class="fas fa-money-bill-wave"></i>
                             </button>
