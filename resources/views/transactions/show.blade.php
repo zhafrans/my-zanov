@@ -213,20 +213,6 @@
                 </table>
             </div>
         </div>
-
-        <!-- Transaction Actions -->
-        <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-            <a href="{{ route('transactions.edit', $transaction->id) }}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                <i class="fas fa-edit mr-2"></i> Edit
-            </a>
-            <form action="{{ route('transactions.destroy', $transaction->id) }}" method="POST" class="inline">
-                @csrf
-                @method('DELETE')
-                <button type="button" onclick="confirmDelete('{{ $transaction->id }}', '{{ $transaction->invoice }}')" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                    <i class="fas fa-trash mr-2"></i> Delete
-                </button>
-            </form>
-        </div>
     </div>
 </div>
 
