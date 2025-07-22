@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('transaction_id')->constrained('transactions')->onDelete('cascade');
             $table->foreignId('product_variant_id')->constrained('product_variants')->onDelete('cascade');
+            $table->foreignId('stock_type_id')->nullable()->constrained('stock_types'); 
             $table->integer('quantity');
             $table->string('snapshot_name');
             $table->decimal('snapshot_price', 20);

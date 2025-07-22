@@ -16,7 +16,8 @@ return new class extends Migration
             $table->enum('type', ['in', 'out']);
             $table->boolean('is_adjustment')->default(false);
             $table->foreignId('to_warehouse_id')->nullable()->constrained('warehouses');
-            $table->enum('destination', ['lost', 'transfer', 'add'])->nullable();
+            $table->enum('destination', ['lost', 'transfer', 'add', 'sold'])->nullable();
+            $table->foreignId('transaction_id')->nullable()->constrained('transactions');
             $table->text('note')->nullable();
             $table->integer('quantity_before')->nullable();
             $table->integer('quantity_after')->nullable();

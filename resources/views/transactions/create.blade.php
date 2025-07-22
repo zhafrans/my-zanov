@@ -140,17 +140,18 @@
                     </div>
 
                     <!-- Selected Products Table -->
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white border border-gray-200">
-                            <thead>
-                                <tr class="bg-gray-50">
+                    <div class="relative overflow-x-auto min-h-[200px] pb-[180px]">
+                        <table class="w-full bg-white border border-gray-200">
+                            <thead class="sticky top-0 bg-gray-50">
+                                <tr>
                                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variant Code</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Type</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                                 </tr>
                             </thead>
-                            <tbody id="selectedProductsTable" class="divide-y divide-gray-200">
+                            <tbody id="selectedProductsTable" class="divide-y divide-gray-200 min-h-[100px]">
                                 <!-- Products will be added here dynamically -->
                             </tbody>
                         </table>
@@ -321,13 +322,13 @@
                             variantCode: variant.dataset.variantCode,
                             price: variant.dataset.price
                         }
-                    }, "{{ $item['quantity'] }}");
+                    }, "{{ $item['quantity'] }}", "{{ $item['stock_type_id'] ?? '' }}");
                 }
             @endforeach
         @endif
     });
 
-    function addProductToTable(info, quantity = 1) {
+    function addProductToTable(info, quantity = 1, stockTypeId = '') {
         const table = document.getElementById('selectedProductsTable');
         const productId = info.value;
         
@@ -352,6 +353,16 @@
                        min="1" 
                        class="w-20 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 quantity-input"
                        required
+                >
+            </td>
+            <td class="px-4 py-2">
+                <select name="items[${productId}][stock_type_id]" 
+                        class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 stock-type-select">
+                    <option value="">Select Stock Type</option>
+                    @foreach(\App\Models\StockType::all() as $stockType)
+                        <option value="{{ $stockType->id }}" ${stockTypeId == "{{ $stockType->id }}" ? 'selected' : ''}>{{ $stockType->name }}</option>
+                    @endforeach
+                </select>
             </td>
             <td class="px-4 py-2">
                 <button type="button" 
@@ -364,6 +375,16 @@
         
         table.appendChild(row);
         document.getElementById('product_variant_search').value = '';
+        
+        // Initialize SlimSelect for the new stock type dropdown
+        new SlimSelect({
+            select: row.querySelector('.stock-type-select'),
+            placeholder: 'Select stock type...',
+            dropdownPosition: 'down',
+            settings: {
+                contentPosition: 'relative' // Menggunakan positioning relative
+            }
+        });
     }
 
     function removeProduct(productId) {
@@ -426,6 +447,5 @@
             }
         }
     });
-
 </script>
 @endsection

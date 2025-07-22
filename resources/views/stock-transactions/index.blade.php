@@ -237,10 +237,13 @@
                             @if($transaction->destination)
                                 <span class="px-2 py-1 text-xs rounded-full inline-flex items-center space-x-1
                                     {{ $transaction->destination === 'lost' ? 'bg-red-100 text-red-800' : 
-                                    ($transaction->destination === 'transfer' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800') }}">
+                                    ($transaction->destination === 'transfer' ? 'bg-blue-100 text-blue-800' : 
+                                    ($transaction->destination === 'sold' ? 'bg-orange-200 text-orange-800' : 'bg-green-100 text-green-800')) }}">
+                                    
                                     @if($transaction->destination === 'transfer')
-                                        <i class="fas fa-arrows-alt-h"></i> <!-- anak panah kanan kiri -->
+                                        <i class="fas fa-arrows-alt-h"></i>
                                     @endif
+
                                     <span>{{ $destinations[$transaction->destination] }}</span>
                                 </span>
                             @else

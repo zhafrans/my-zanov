@@ -47,7 +47,8 @@ class StockTransactionController extends Controller
         $destinations = [
             'lost' => 'Lost',
             'transfer' => 'Transfer',
-            'add' => 'Add'
+            'add' => 'Add',
+            'sold' => 'Sold'
         ];
         
         $types = [

@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\ProductVariant;
+use App\Models\StockAmount;
+use App\Models\StockAmountItem;
+use App\Models\StockTransaction;
+use App\Models\StockType;
 use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
@@ -74,6 +78,7 @@ class TransactionController extends Controller
     {
         $customers = Customer::orderBy('name')->get(['id', 'name']);
         $products = ProductVariant::with('product')->orderBy('code')->get(['id', 'code', 'product_id']);
+        $stockTypes = StockType::all(); // Add this line
 
         $sellerRole = DB::table('user_roles')->where('code', 'SALES')->first();
         $sellers = User::where('role_id', $sellerRole->id)
@@ -90,7 +95,8 @@ class TransactionController extends Controller
             if (is_array($item) && isset($item['product_variant_id']) && isset($item['quantity'])) {
                 $items[] = [
                     'product_variant_id' => $item['product_variant_id'],
-                    'quantity' => $item['quantity']
+                    'quantity' => $item['quantity'],
+                    'stock_type_id' => $item['stock_type_id'] ?? null
                 ];
             }
         }
@@ -110,6 +116,7 @@ class TransactionController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_variant_id' => 'required|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.stock_type_id' => 'required|exists:stock_types,id',
         ]);
 
         if ($validator->fails()) {
@@ -123,7 +130,7 @@ class TransactionController extends Controller
 
         try {
             // Automatically set status based on payment type
-           if ($request->payment_type === 'cash') {
+            if ($request->payment_type === 'cash') {
                 $status = $request->is_tempo ? 'pending' : 'paid';
             } else {
                 $status = 'pending';
@@ -153,20 +160,72 @@ class TransactionController extends Controller
                 ]);
             }
 
-            // Create transaction items
+            // Create transaction items and reduce stock
             foreach ($request->items as $item) {
                 $variant = ProductVariant::find($item['product_variant_id']);
+                $seller = User::with('vehicle')->find($request->seller_id);
+                $warehouseId = $seller->vehicle->warehouse_id ?? null;
                 
                 if (!$variant) {
                     throw new Exception("Product variant not found: ".$item['product_variant_id']);
                 }
 
+                // Create transaction item
                 $transaction->items()->create([
                     'product_variant_id' => $item['product_variant_id'],
                     'quantity' => $item['quantity'],
+                    'stock_type_id' => $item['stock_type_id'],
                     'snapshot_name' => $variant->code,
                     'snapshot_price' => $request->deal_price,
                 ]);
+
+                // Reduce stock amount
+                if ($item['stock_type_id']) {
+                    // Find the stock amount for this product variant
+                    $stockAmount = StockAmount::where('warehouse_id', $warehouseId)
+                        ->first();
+
+                    if (!$stockAmount) {
+                        throw new Exception("Stock not found for product variant: ".$item['product_variant_id']);
+                    }
+
+                    // Find the specific stock type item
+                    $stockAmountItem = StockAmountItem::where('stock_amount_id', $stockAmount->id)
+                        ->where('stock_type_id', $item['stock_type_id'])
+                        ->first();
+
+                    if (!$stockAmountItem) {
+                        throw new Exception("Stock type not found for product variant: ".$item['product_variant_id']);
+                    }
+
+                    // Check if enough stock is available
+                    if ($stockAmountItem->amount < $item['quantity']) {
+                        throw new Exception("Insufficient stock for product variant: ".$variant->code);
+                    }
+
+                     // Get quantities before update
+                    $quantityBefore = $stockAmountItem->amount;
+                    $quantityAfter = $quantityBefore - $item['quantity'];
+
+                    // Create stock transaction record
+                    StockTransaction::create([
+                        'stock_amount_id' => $stockAmount->id,
+                        'warehouse_id' => $warehouseId,
+                        'quantity' => $item['quantity'],
+                        'type' => 'out',
+                        'destination' => 'sold',
+                        'transaction_id' => $transaction->id,
+                        'quantity_before' => $quantityBefore,
+                        'quantity_after' => $quantityAfter,
+                        'user_id' => $request->seller_id,
+                        'note' => 'Sold via transaction',
+                        'created_at' => $transaction->transaction_date,
+                    ]);
+
+                    // Reduce the stock
+                    $stockAmountItem->decrement('amount', $item['quantity']);
+                    $stockAmount->decrement('total_amount', $item['quantity']);
+                }
             }
 
             // If credit payment, create installment and outstanding records

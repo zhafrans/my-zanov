@@ -98,9 +98,12 @@ class ProductVariantController extends Controller
 
             $baseCode = $productCode . $sizeVal . $heelCode . $colorCode . $yearMonth . str_pad($baseSequence, 3, '0', STR_PAD_LEFT);
 
-            $codeKey = $productCode . $heelCode;
             $codeCount = ProductVariant::where('code', 'like', $productCode . $heelCode . '%')->count() + 1;
-            $shortCode = $productCode . $heelCode . str_pad($codeCount, 2, '0', STR_PAD_LEFT);
+            $shortCode = null;
+            if (empty($request->other_code)) {
+                $codeCount = ProductVariant::where('code', 'like', $productCode . $heelCode . '%')->count() + 1;
+                $shortCode = $productCode . $heelCode . str_pad($codeCount, 2, '0', STR_PAD_LEFT);
+            }
 
             $imagePath = null;
             if ($request->hasFile('image')) {
@@ -112,11 +115,11 @@ class ProductVariantController extends Controller
             ProductVariant::create([
                 'base_code' => $baseCode,
                 'code' => $shortCode,
+                'other_code' => $request->other_code,
                 'product_id' => $product->id,
                 'color_id' => $color->id,
                 'size_id' => $size->id,
                 'heel_id' => $heel->id,
-                'other_code' => $request->other_code,
                 'gender' => $request->gender,
                 'image' => $imagePath ?? 'default.jpg',
                 'price' => $request->price,
