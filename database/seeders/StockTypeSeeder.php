@@ -12,7 +12,6 @@ class StockTypeSeeder extends Seeder
         $stockTypes = [
             ['code' => 'SP', 'name' => 'Sepatu Pria'],
             ['code' => 'SW', 'name' => 'Sepatu Wanita'],
-            ['code' => 'RJ', 'name' => 'Rajut'],
         ];
 
         foreach ($stockTypes as $type) {
