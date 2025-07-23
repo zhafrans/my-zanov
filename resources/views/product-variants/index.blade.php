@@ -18,15 +18,13 @@
                 <div class="relative flex items-center">
                     <select 
                         name="search_type" 
+                        id="search_type"
                         class="appearance-none bg-white border border-gray-300 rounded-l-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                         <option value="code" {{ request('search_type', 'code') == 'code' ? 'selected' : '' }}>Code</option>
                         <option value="base_code" {{ request('search_type') == 'base_code' ? 'selected' : '' }}>Base Code</option>
                         <option value="other_code" {{ request('search_type') == 'other_code' ? 'selected' : '' }}>Other Code</option>
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
                     
                     <div class="relative flex-1">
                         <input 
@@ -174,9 +172,6 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">{{ $variant->code ?? $variant->other_code ?? '-' }}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900"></div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-900">{{ $variant->product->name }}</div>
@@ -538,7 +533,82 @@
     </div>
 </div>
 
+<!-- SlimSelect JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/1.27.1/slimselect.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/1.27.1/slimselect.min.css" rel="stylesheet"></link>
+
 <script>
+    // Initialize SlimSelect for filter dropdowns
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all filter dropdowns
+        new SlimSelect({
+            select: '#product_id',
+            placeholder: 'All Products',
+            allowDeselect: true,
+            deselectLabel: '<span class="text-red-500">×</span>'
+        });
+
+        new SlimSelect({
+            select: '#color_id',
+            placeholder: 'All Colors',
+            allowDeselect: true,
+            deselectLabel: '<span class="text-red-500">×</span>'
+        });
+
+        new SlimSelect({
+            select: '#size_id',
+            placeholder: 'All Sizes',
+            allowDeselect: true,
+            deselectLabel: '<span class="text-red-500">×</span>'
+        });
+
+        new SlimSelect({
+            select: '#heel_id',
+            placeholder: 'All Heels',
+            allowDeselect: true,
+            deselectLabel: '<span class="text-red-500">×</span>'
+        });
+
+        new SlimSelect({
+            select: '#gender',
+            placeholder: 'All Genders',
+            allowDeselect: true,
+            deselectLabel: '<span class="text-red-500">×</span>'
+        });
+
+        // Initialize search type dropdown (not searchable)
+        new SlimSelect({
+            select: '#search_type',
+            showSearch: false
+        });
+
+        // Initialize dropdowns in create modal
+        new SlimSelect({
+            select: '#createVariantModal #product_id',
+            placeholder: 'Select Product'
+        });
+
+        new SlimSelect({
+            select: '#createVariantModal #color_id',
+            placeholder: 'Select Color'
+        });
+
+        new SlimSelect({
+            select: '#createVariantModal #size_id',
+            placeholder: 'Select Size'
+        });
+
+        new SlimSelect({
+            select: '#createVariantModal #heel_id',
+            placeholder: 'Select Heel'
+        });
+
+        new SlimSelect({
+            select: '#createVariantModal #gender',
+            placeholder: 'Select Gender'
+        });
+    });
+
     // Function to show variant details
     function showVariant(variant) {
         // Populate the modal with variant data
