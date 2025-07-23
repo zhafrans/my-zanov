@@ -15,15 +15,13 @@ use App\Http\Controllers\Web\TransactionController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\VehicleController;
 use App\Http\Controllers\Web\WarehouseController;
-use App\Models\City;
-use App\Models\Subdistrict;
-use App\Models\Village;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('login');
+    return redirect()->route('catalogue');
 });
+
+Route::get('/catalogue', [ProductVariantController::class, 'catalogue'])->name('catalogue');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');

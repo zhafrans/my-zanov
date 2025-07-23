@@ -200,4 +200,35 @@ class ProductVariantController extends Controller
             return back()->with('error', 'Failed to delete product variant: '.$e->getMessage());
         }
     }
+    
+    public function catalogue(Request $request)
+    {
+        $variants = ProductVariant::with(['product', 'color', 'size', 'heel'])
+            ->when($request->gender, function($query) use ($request) {
+                $query->where('gender', $request->gender);
+            })
+            ->when($request->heel_id, function($query) use ($request) {
+                $query->where('heel_id', $request->heel_id);
+            })
+            ->when($request->color_id, function($query) use ($request) {
+                $query->where('color_id', $request->color_id);
+            })
+           ->when($request->search, function($query) use ($request) {
+                $query->where(function($q) use ($request) {
+                    $q->where('code', 'like', '%' . $request->search . '%')
+                        ->orWhere('base_code', 'like', '%' . $request->search . '%')
+                        ->orWhere('other_code', 'like', '%' . $request->search . '%')
+                        ->orWhereHas('product', function($subQuery) use ($request) {
+                            $subQuery->where('name', 'like', '%' . $request->search . '%');
+                        });
+                });
+            })
+            ->orderByDesc('created_at')
+            ->paginate(12);
+
+        $heels = Heel::orderBy('name')->get(['id', 'name']);
+        $colors = Color::orderBy('name')->get(['id', 'name']);
+
+        return view('product-variants.catalogue', compact('variants', 'heels', 'colors'));
+    }
 }
