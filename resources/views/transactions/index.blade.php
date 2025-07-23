@@ -41,9 +41,6 @@
                         <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
                     @endforeach
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <i class="fas fa-chevron-down"></i>
-                </div>
             </div>
         </div>
 
@@ -61,9 +58,6 @@
                         <option value="{{ $seller->id }}" {{ request('seller_id') == $seller->id ? 'selected' : '' }}>{{ $seller->name }}</option>
                     @endforeach
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <i class="fas fa-chevron-down"></i>
-                </div>
             </div>
         </div>
 
@@ -83,9 +77,6 @@
                         </option>
                     @endforeach
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <i class="fas fa-chevron-down"></i>
-                </div>
             </div>
         </div>
 
@@ -102,9 +93,6 @@
                     <option value="cash" {{ request('payment_type') == 'cash' ? 'selected' : '' }}>Cash</option>
                     <option value="installment" {{ request('payment_type') == 'installment' ? 'selected' : '' }}>Installment</option>
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <i class="fas fa-chevron-down"></i>
-                </div>
             </div>
         </div>
 
@@ -121,9 +109,6 @@
                     <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
                     <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <i class="fas fa-chevron-down"></i>
-                </div>
             </div>
         </div>
 
@@ -155,7 +140,6 @@
                 </div>
             </div>
         </div>
-
 
         <!-- Action Buttons -->
         <div class="flex space-x-2">
@@ -358,78 +342,120 @@
         </div>
     </div>
 
+<!-- SlimSelect JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/1.27.1/slimselect.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/1.27.1/slimselect.min.css" rel="stylesheet"></link>
+
 <script>
-    // Function to open payment modal with today's date checkbox functionality
-    function openPaymentModal(transactionId) {
-        // Reset form and set action
-        document.getElementById('paymentForm').action = `/transactions/${transactionId}/pay-installment`;
-        document.getElementById('paymentForm').reset();
-        
-        // Get elements
-        const paymentModal = document.getElementById('paymentModal');
-        const paymentDateInput = document.getElementById('payment_date');
-        const paymentTodayCheckbox = document.getElementById('payment_today_checkbox');
-        
-        // Today checkbox functionality
-        paymentTodayCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                // Set to today's date in YYYY-MM-DD format
-                const today = new Date();
-                const formattedDate = today.toISOString().split('T')[0];
-                paymentDateInput.value = formattedDate;
-            } else {
-                // Clear the date if checkbox is unchecked
-                paymentDateInput.value = '';
+    // Initialize SlimSelect for filter dropdowns
+    document.addEventListener('DOMContentLoaded', function() {
+        new SlimSelect({
+            select: '#customer_id',
+            placeholder: 'All Customers',
+            allowDeselect: true,
+            deselectLabel: '<span class="text-red-500">×</span>'
+        });
+
+        new SlimSelect({
+            select: '#seller_id',
+            placeholder: 'All Sellers',
+            allowDeselect: true,
+            deselectLabel: '<span class="text-red-500">×</span>'
+        });
+
+        new SlimSelect({
+            select: '#product_variant_id',
+            placeholder: 'All Products',
+            allowDeselect: true,
+            deselectLabel: '<span class="text-red-500">×</span>'
+        });
+
+        new SlimSelect({
+            select: '#payment_type',
+            placeholder: 'All Types',
+            allowDeselect: true,
+            deselectLabel: '<span class="text-red-500">×</span>'
+        });
+
+        new SlimSelect({
+            select: '#status',
+            placeholder: 'All Status',
+            allowDeselect: true,
+            deselectLabel: '<span class="text-red-500">×</span>'
+        });
+
+        // Function to open payment modal with today's date checkbox functionality
+        function openPaymentModal(transactionId) {
+            // Reset form and set action
+            document.getElementById('paymentForm').action = `/transactions/${transactionId}/pay-installment`;
+            document.getElementById('paymentForm').reset();
+            
+            // Get elements
+            const paymentModal = document.getElementById('paymentModal');
+            const paymentDateInput = document.getElementById('payment_date');
+            const paymentTodayCheckbox = document.getElementById('payment_today_checkbox');
+            
+            // Today checkbox functionality
+            paymentTodayCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    // Set to today's date in YYYY-MM-DD format
+                    const today = new Date();
+                    const formattedDate = today.toISOString().split('T')[0];
+                    paymentDateInput.value = formattedDate;
+                } else {
+                    // Clear the date if checkbox is unchecked
+                    paymentDateInput.value = '';
+                }
+            });
+            
+            // Show modal
+            paymentModal.classList.remove('hidden');
+            
+            // Clean up event listener when modal is closed
+            const cleanUp = function() {
+                paymentTodayCheckbox.removeEventListener('change', this);
+                paymentModal.removeEventListener('hidden', cleanUp);
+            };
+            paymentModal.addEventListener('hidden', cleanUp);
+        }
+
+        // Function to open delete confirmation modal
+        function confirmDelete(transactionId, transactionInvoice) {
+            document.getElementById('transactionInvoiceToDelete').textContent = transactionInvoice;
+            document.getElementById('deleteForm').action = `/transactions/${transactionId}`;
+            openModal('deleteConfirmationModal');
+        }
+
+        // Modal functions
+        function closeAllModals() {
+            document.querySelectorAll('[id$="Modal"]').forEach(modal => {
+                modal.classList.add('hidden');
+            });
+        }
+
+        function openModal(modalId) {
+            closeAllModals();
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Date validation
+        document.getElementById('start_date').addEventListener('change', function() {
+            const endDate = document.getElementById('end_date');
+            if (this.value && endDate.value && this.value > endDate.value) {
+                endDate.value = this.value;
             }
         });
-        
-        // Show modal
-        paymentModal.classList.remove('hidden');
-        
-        // Clean up event listener when modal is closed
-        const cleanUp = function() {
-            paymentTodayCheckbox.removeEventListener('change', this);
-            paymentModal.removeEventListener('hidden', cleanUp);
-        };
-        paymentModal.addEventListener('hidden', cleanUp);
-    }
 
-    // Function to open delete confirmation modal
-    function confirmDelete(transactionId, transactionInvoice) {
-        document.getElementById('transactionInvoiceToDelete').textContent = transactionInvoice;
-        document.getElementById('deleteForm').action = `/transactions/${transactionId}`;
-        openModal('deleteConfirmationModal');
-    }
-
-    // Modal functions
-    function closeAllModals() {
-        document.querySelectorAll('[id$="Modal"]').forEach(modal => {
-            modal.classList.add('hidden');
+        document.getElementById('end_date').addEventListener('change', function() {
+            const startDate = document.getElementById('start_date');
+            if (this.value && startDate.value && this.value < startDate.value) {
+                startDate.value = this.value;
+            }
         });
-    }
-
-    function openModal(modalId) {
-        closeAllModals();
-        document.getElementById(modalId).classList.remove('hidden');
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).classList.add('hidden');
-    }
-
-    // Date validation
-    document.getElementById('start_date').addEventListener('change', function() {
-        const endDate = document.getElementById('end_date');
-        if (this.value && endDate.value && this.value > endDate.value) {
-            endDate.value = this.value;
-        }
-    });
-
-    document.getElementById('end_date').addEventListener('change', function() {
-        const startDate = document.getElementById('start_date');
-        if (this.value && startDate.value && this.value < startDate.value) {
-            startDate.value = this.value;
-        }
     });
 </script>
 
