@@ -9,6 +9,8 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap");
 
@@ -74,22 +76,22 @@
           </div>
           <div class="hidden md:ml-6 md:flex md:items-center md:space-x-8">
             <a
-              href="{{ route('catalogue') }}"
+              href="#home"
               class="nav-link text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium"
               >Home</a
             >
             <a
-              href="{{ route('catalogue') }}"
+              href="#collections"
               class="nav-link text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium"
               >Collections</a
             >
-            <a
-              href="#"
+            {{-- <a
+              href="#features"
               class="nav-link text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium"
-              >About</a
-            >
+              >Features</a
+            > --}}
             <a
-              href="#"
+              href="#newsletter"
               class="nav-link text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium"
               >Contact</a
             >
@@ -98,30 +100,31 @@
             <button class="p-2 text-gray-900">
               <i class="fas fa-search"></i>
             </button>
-            <button class="p-2 text-gray-900">
+            {{-- <button class="p-2 text-gray-900">
               <i class="fas fa-user"></i>
             </button>
             <button class="p-2 text-gray-900">
               <i class="fas fa-shopping-bag"></i>
-            </button>
+            </button> --}}
           </div>
         </div>
       </div>
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero-section text-white pt-32 pb-20 md:pt-40 md:pb-28 px-4">
+    <section class="hero-section text-white pt-32 pb-20 md:pt-40 md:pb-28 px-4" id="home">
       <div class="max-w-7xl mx-auto text-center">
-        <h1 class="title-font text-4xl md:text-6xl font-bold mb-4">
-          Elegance in Every Step
+        <h1 class="title-font text-4xl md:text-6xl font-bold mb-4" data-aos="fade-down">
+          Crafted With Quality, Worn With Pride.
         </h1>
-        <p class="text-lg md:text-xl max-w-2xl mx-auto mb-8">
+        <p class="text-lg md:text-xl max-w-2xl mx-auto mb-8" data-aos="fade-down" data-aos-delay="100">
           Discover the perfect blend of comfort and style with ZANOV's premium
           footwear collection.
         </p>
         <a
           href="#collections"
           class="bg-white text-black px-8 py-3 font-medium hover:bg-gray-100 transition duration-300"
+          data-aos="fade-up" data-aos-delay="200"
         >
           Shop Now
         </a>
@@ -180,20 +183,20 @@
           </form>
       </div>
 
-      <h2 class="title-font text-3xl font-bold text-center mb-12">
+      <h2 class="title-font text-3xl font-bold text-center mb-12" data-aos="fade-up">
         Our Collections
       </h2>
 
+
       <!-- Product Grid -->
-      <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-        id="product-grid"
-      >
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="product-grid">
         @foreach($variants as $variant)
-        <div
-          class="shoe-card bg-white rounded-lg overflow-hidden shadow-md"
-          data-category="heel-{{ $variant->heel_id }} {{ $variant->gender }}"
-        >
+          <div
+            class="shoe-card bg-white rounded-lg overflow-hidden shadow-md"
+            data-category="heel-{{ $variant->heel_id }} {{ $variant->gender }}"
+            data-aos="fade-up"
+            data-aos-delay="{{ ($loop->index % 3) * 100 }}"
+          >
           <div class="relative overflow-hidden h-80">
             <img
               src="{{ $variant->image ? Storage::url($variant->image) : 'https://via.placeholder.com/300x400?text=No+Image' }}"
@@ -249,33 +252,40 @@
     <section class="bg-gray-100 py-16">
       <div class="max-w-7xl mx-auto px-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="text-center">
+          
+          <!-- 100% Guarantee -->
+          <div class="text-center" data-aos="fade-up" data-aos-delay="0">
             <div class="flex justify-center mb-4">
-              <i class="fas fa-truck text-3xl"></i>
+              <i class="fas fa-shield-alt text-3xl"></i> <!-- Shield icon for guarantee -->
             </div>
-            <h3 class="font-medium text-lg mb-2">Free Shipping</h3>
-            <p class="text-gray-600">On all orders over Rp 500.000</p>
+            <h3 class="font-medium text-lg mb-2">100% Guarantee</h3>
+            <p class="text-gray-600">Shop with confidence — your satisfaction is our priority.</p>
           </div>
-          <div class="text-center">
+          
+          <!-- Best Quality -->
+          <div class="text-center" data-aos="fade-up" data-aos-delay="100">
             <div class="flex justify-center mb-4">
-              <i class="fas fa-undo text-3xl"></i>
+              <i class="fas fa-star text-3xl"></i> <!-- Star icon for quality -->
             </div>
-            <h3 class="font-medium text-lg mb-2">Easy Returns</h3>
-            <p class="text-gray-600">30-day return policy</p>
+            <h3 class="font-medium text-lg mb-2">Best Quality</h3>
+            <p class="text-gray-600">Premium materials and craftsmanship in every product.</p>
           </div>
-          <div class="text-center">
+          
+          <!-- Easy Payment -->
+          <div class="text-center" data-aos="fade-up" data-aos-delay="200">
             <div class="flex justify-center mb-4">
-              <i class="fas fa-lock text-3xl"></i>
+              <i class="fas fa-credit-card text-3xl"></i> <!-- Credit card icon for payment -->
             </div>
-            <h3 class="font-medium text-lg mb-2">Secure Payment</h3>
-            <p class="text-gray-600">100% secure checkout</p>
+            <h3 class="font-medium text-lg mb-2">Easy Payment</h3>
+            <p class="text-gray-600">Pay in full or installments — with flexible pricing options.</p>
           </div>
+
         </div>
       </div>
     </section>
 
     <!-- Newsletter -->
-    <section class="max-w-7xl mx-auto px-4 py-16">
+    <section class="max-w-7xl mx-auto px-4 py-16" id="newsletter">
       <div class="bg-black text-white p-8 md:p-12 rounded-lg">
         <div class="max-w-2xl mx-auto text-center">
           <h2 class="title-font text-3xl font-bold mb-4">Stay Updated</h2>
@@ -306,8 +316,7 @@
           <div>
             <h3 class="title-font text-xl font-bold mb-4">ZANOV</h3>
             <p class="text-gray-400">
-              Crafting premium footwear since 1995. Our shoes are designed for
-              those who appreciate quality, comfort, and timeless style.
+              Since 2022, ZANOV has been crafting high-quality casual and formal footwear in a wide range of styles and colors. Proudly handmade with care, our shoes combine comfort, durability, and refined design for everyday elegance.
             </p>
           </div>
           <div>
@@ -334,11 +343,11 @@
             <h4 class="font-medium mb-4">Customer Service</h4>
             <ul class="space-y-2">
               <li>
-                <a href="#" class="text-gray-400 hover:text-white transition"
-                  >Contact Us</a
-                >
+                <a href="https://wa.me/6281329235551" target="_blank" class="text-gray-400 hover:text-white transition">
+                  Contact Us
+                </a>
               </li>
-              <li>
+              {{-- <li>
                 <a href="#" class="text-gray-400 hover:text-white transition"
                   >FAQs</a
                 >
@@ -347,7 +356,7 @@
                 <a href="#" class="text-gray-400 hover:text-white transition"
                   >Shipping & Returns</a
                 >
-              </li>
+              </li> --}}
               <li>
                 <a href="#" class="text-gray-400 hover:text-white transition"
                   >Size Guide</a
@@ -361,9 +370,9 @@
               <a href="#" class="text-gray-400 hover:text-white transition"
                 ><i class="fab fa-facebook-f"></i
               ></a>
-              <a href="#" class="text-gray-400 hover:text-white transition"
-                ><i class="fab fa-instagram"></i
-              ></a>
+              <a href="https://www.instagram.com/zanovshoes" target="_blank" class="text-gray-400 hover:text-white transition">
+                <i class="fab fa-instagram"></i>
+              </a>
               <a href="#" class="text-gray-400 hover:text-white transition"
                 ><i class="fab fa-twitter"></i
               ></a>
@@ -371,8 +380,8 @@
                 ><i class="fab fa-pinterest"></i
               ></a>
             </div>
-            <p class="text-gray-400">Email: info@zanov.com</p>
-            <p class="text-gray-400">Phone: +62 123 4567 890</p>
+            <p class="text-gray-400">Email: bintangstorepwt@gmail.com</p>
+            <p class="text-gray-400">Phone: +62 8132 9235 551</p>
           </div>
         </div>
         <div
@@ -511,6 +520,36 @@
           if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
             modal.classList.add('hidden');
             document.body.style.overflow = 'auto';
+          }
+        });
+      });
+    </script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+      // Initialize AOS
+      AOS.init({
+        duration: 800,
+        easing: 'ease-in-out',
+        once: true
+      });
+
+      // Smooth scrolling for navigation links
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          
+          const targetId = this.getAttribute('href');
+          if (targetId === '#') return;
+          
+          const targetElement = document.querySelector(targetId);
+          if (targetElement) {
+            targetElement.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+            
+            // Update URL without refreshing
+            history.pushState(null, null, targetId);
           }
         });
       });

@@ -17,11 +17,7 @@ use App\Http\Controllers\Web\VehicleController;
 use App\Http\Controllers\Web\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route('catalogue');
-});
-
-Route::get('/catalogue', [ProductVariantController::class, 'catalogue'])->name('catalogue');
+Route::get('/', [ProductVariantController::class, 'catalogue'])->name('catalogue');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
