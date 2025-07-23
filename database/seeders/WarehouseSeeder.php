@@ -30,11 +30,7 @@ class WarehouseSeeder extends Seeder
             [
                 'name' => 'Warehouse Teluk',
                 'type' => 'WAREHOUSE',
-            ],
-            [
-                'name' => 'Warehouse Pliken',
-                'type' => 'WAREHOUSE',
-            ],
+            ]
         ];
 
         foreach ($warehouses as $warehouse) {

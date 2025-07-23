@@ -114,7 +114,6 @@
                     <option value="">All Genders</option>
                     <option value="man" {{ request('gender') == 'man' ? 'selected' : '' }}>Man</option>
                     <option value="woman" {{ request('gender') == 'woman' ? 'selected' : '' }}>Woman</option>
-                    <option value="unisex" {{ request('gender') == 'unisex' ? 'selected' : '' }}>Unisex</option>
                 </select>
             </div>
 

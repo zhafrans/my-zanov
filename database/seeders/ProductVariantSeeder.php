@@ -60,7 +60,7 @@ class ProductVariantSeeder extends Seeder
             $installmentPrice = rand(250000, 300000);
 
              // Gender acak
-            $genders = ['man', 'woman', 'unisex'];
+            $genders = ['man', 'woman'];
 
             ProductVariant::create([
                 'base_code'          => $baseCode,

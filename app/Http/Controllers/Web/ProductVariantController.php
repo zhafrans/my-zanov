@@ -68,7 +68,7 @@ class ProductVariantController extends Controller
             'heel_id' => 'required|exists:heels,id',
             'other_code' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'gender' => 'required|in:man,woman,unisex',
+            'gender' => 'required|in:man,woman',
             'installment_price' => 'required|numeric|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg',
         ]);

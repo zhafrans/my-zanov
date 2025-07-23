@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('color_id')->constrained('colors');
             $table->foreignId('size_id')->constrained('sizes');
             $table->foreignId('heel_id')->constrained('heels');
-            $table->enum('gender', ['man', 'woman', 'unisex']);
+            $table->enum('gender', ['man', 'woman']);
             $table->string('image')->nullable();
             $table->string('price')->nullable();
             $table->string('installment_price')->nullable();
