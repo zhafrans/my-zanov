@@ -10,7 +10,7 @@
     </div>
 
     <!-- Search and Filter Section -->
-    <form method="GET" action="{{ route('product-variants.index') }}" class="mb-4">
+   <form method="GET" action="{{ route('product-variants.index') }}" class="mb-4">
         <div class="flex flex-wrap items-end gap-4">
             <!-- Search Field -->
             <div class="flex-1 min-w-[250px]">
@@ -25,6 +25,9 @@
                         <option value="base_code" {{ request('search_type') == 'base_code' ? 'selected' : '' }}>Base Code</option>
                         <option value="other_code" {{ request('search_type') == 'other_code' ? 'selected' : '' }}>Other Code</option>
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
                     
                     <div class="relative flex-1">
                         <input 
@@ -574,12 +577,6 @@
             placeholder: 'All Genders',
             allowDeselect: true,
             deselectLabel: '<span class="text-red-500">×</span>'
-        });
-
-        // Initialize search type dropdown (not searchable)
-        new SlimSelect({
-            select: '#search_type',
-            showSearch: false
         });
 
         // Initialize dropdowns in create modal
