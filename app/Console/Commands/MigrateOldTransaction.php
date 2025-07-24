@@ -41,7 +41,7 @@ class MigrateOldTransaction extends Command
     {
         $this->info("Starting migration of old transactions...");
 
-        // Get all old transactions (remove limit for production)
+        // Get all old transactions
         $oldTransactions = OldTransaction::orderBy('id')->get();
         $total = count($oldTransactions);
         $this->output->progressStart($total);
@@ -72,6 +72,9 @@ class MigrateOldTransaction extends Command
                 
                 Log::error('Failed to migrate transaction', $errorDetails);
                 $failedTransactions[] = $errorDetails;
+                
+                // Continue to next transaction even if this one fails
+                continue;
             }
             $this->output->progressAdvance();
         }
@@ -88,53 +91,48 @@ class MigrateOldTransaction extends Command
             $logFileName = 'failed_transactions_' . now()->format('Ymd_His') . '.log';
             $logDirectory = storage_path('logs/migrations/');
             
-            // Create directory if it doesn't exist
             if (!file_exists($logDirectory)) {
                 mkdir($logDirectory, 0755, true);
             }
             
             $logPath = $logDirectory . $logFileName;
-            
             file_put_contents($logPath, json_encode($failedTransactions, JSON_PRETTY_PRINT));
-            
             $this->error("Failed transactions log saved to: {$logPath}");
         }
     }
 
     protected function processTransaction(OldTransaction $oldTrx)
     {
-        // Validate required fields with fallbacks
-        $this->validateTransactionData($oldTrx);
+        // Use no_kartu as invoice directly (allow duplicates)
+        $invoiceNumber = $oldTrx->no_kartu ?? 'INV' . $oldTrx->id;
 
-        // Generate unique invoice number with fallback
-        $invoiceBase = $oldTrx->no_kartu ?? 'INV' . Str::random(6);
-        $invoiceNumber = $this->generateUniqueInvoice($invoiceBase);
-
-        // Create or find customer with fallbacks
+        // Create or find customer with robust fallbacks
         $customer = $this->createCustomer($oldTrx);
 
-        // Determine payment type and status with fallbacks
-        $paymentType = strtoupper($oldTrx->ket ?? '') === 'CASH' ? 'cash' : 'installment';
+        // Determine payment type with fallback
+        $paymentType = $this->determinePaymentType($oldTrx);
+        
+        // Determine status with fallback
         $status = $this->determineStatus($oldTrx);
 
-        // Create transaction with fallback values
+        // Create transaction with robust fallbacks
         $transaction = Transaction::create([
             'invoice' => $invoiceNumber,
-            'deal_price' => $oldTrx->harga ?? 0,
+            'deal_price' => $this->getNumericValue($oldTrx->harga, 0),
             'customer_id' => $customer->id,
             'seller_id' => $this->getSalesId($oldTrx->nama_sales ?? ''),
             'payment_type' => $paymentType,
             'status' => $status,
-            'transaction_date' => $oldTrx->tgl_pengambilan ?? $oldTrx->tgl_ang1 ?? now(),
+            'transaction_date' => $this->getValidDate($oldTrx->tgl_pengambilan ?? $oldTrx->tgl_ang1),
             'is_tempo' => $this->hasMultipleInstallments($oldTrx) ? '1' : null,
-            'tempo_at' => Carbon::parse($oldTrx->tgl_pengambilan ?? $oldTrx->tgl_ang1 ?? now())->addMonth(),
+            'tempo_at' => $this->getValidDate($oldTrx->tgl_pengambilan ?? $oldTrx->tgl_ang1, true),
             'note' => $oldTrx->ket ?? null,
             'is_printed' => $oldTrx->is_created ?? 0,
-            'created_at' => $oldTrx->created_at ?? now(),
-            'updated_at' => $oldTrx->updated_at ?? now(),
+            'created_at' => $this->getValidDate($oldTrx->created_at),
+            'updated_at' => $this->getValidDate($oldTrx->updated_at),
         ]);
 
-        // Create product variant and transaction item with fallbacks
+        // Create product variant and transaction item with robust fallbacks
         $this->createProductAndItem($oldTrx, $transaction);
 
         // Process installments if applicable
@@ -142,79 +140,136 @@ class MigrateOldTransaction extends Command
             $this->processInstallments($oldTrx, $transaction);
         }
 
-        // Create outstanding record if not fully paid
-        if ($status === 'pending') {
-            $outstandingAmount = $this->calculateOutstanding($oldTrx);
-            TransactionOutstanding::create([
-                'transaction_id' => $transaction->id,
-                'outstanding_amount' => $outstandingAmount,
-                'created_at' => $oldTrx->created_at ?? now(),
-                'updated_at' => $oldTrx->updated_at ?? now(),
-            ]);
-        }
-    }
-
-    protected function validateTransactionData(OldTransaction $oldTrx)
-    {
-        // Skip validation for empty fields and provide defaults later
-        // Only validate critical numeric fields that can't have defaults
-        if (isset($oldTrx->harga)) {
-            if (!is_numeric($oldTrx->harga)) {
-                throw new \Exception("Invalid harga value: {$oldTrx->harga} for transaction ID: {$oldTrx->id}");
-            }
-
-            if ($oldTrx->harga <= 0) {
-                throw new \Exception("Harga must be greater than 0 for transaction ID: {$oldTrx->id}");
-            }
-        }
-    }
-
-    protected function generateUniqueInvoice($base)
-    {
-        $cleanBase = $base ? preg_replace('/[^a-zA-Z0-9]/', '', $base) : 'INV';
-        $count = Transaction::where('invoice', 'like', $cleanBase.'%')->count();
+        // Calculate outstanding amount
+        $outstandingAmount = $this->calculateOutstanding($oldTrx);
         
-        if ($count === 0) {
-            return $cleanBase;
-        }
+        // Always create outstanding record
+        TransactionOutstanding::create([
+            'transaction_id' => $transaction->id,
+            'outstanding_amount' => $outstandingAmount,
+            'created_at' => $this->getValidDate($oldTrx->created_at),
+            'updated_at' => $this->getValidDate($oldTrx->updated_at),
+        ]);
 
-        return $cleanBase . 'N' . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+        // Update transaction status if fully paid
+        if ($outstandingAmount <= 0) {
+            $transaction->update(['status' => 'paid']);
+        }
+    }
+
+    protected function determinePaymentType($oldTrx)
+    {
+        $ket = strtoupper($oldTrx->ket ?? '');
+        if (strpos($ket, 'CASH') !== false) {
+            return 'cash';
+        }
+        
+        // If there are any installment payments, it's installment
+        if (!empty($oldTrx->ang1) || !empty($oldTrx->ang2) || !empty($oldTrx->ang3) || 
+            !empty($oldTrx->ang4) || !empty($oldTrx->ang5)) {
+            return 'installment';
+        }
+        
+        // Default to cash if no installments
+        return 'cash';
+    }
+
+    protected function getNumericValue($value, $default = 0)
+    {
+        if (is_numeric($value)) {
+            return $value;
+        }
+        
+        // Try to extract numeric value from string
+        if (is_string($value)) {
+            preg_match('/\d+/', $value, $matches);
+            if (isset($matches[0])) {
+                return (float)$matches[0];
+            }
+        }
+        
+        return $default;
+    }
+
+    protected function getValidDate($date, $addMonth = false)
+    {
+        try {
+            $date = Carbon::parse($date);
+            if ($addMonth) {
+                $date = $date->addMonth();
+            }
+            return $date;
+        } catch (\Exception $e) {
+            return now();
+        }
     }
 
     protected function createCustomer(OldTransaction $oldTrx)
     {
-        // Find existing locations with partial matching
-        $subdistrict = null;
-        $city = null;
-        
-        if (!empty($oldTrx->kecamatan)) {
-            $subdistrict = Subdistrict::where('name', 'LIKE', '%' . $oldTrx->kecamatan . '%')->first();
-        }
-        
-        if (!empty($oldTrx->kabupaten)) {
-            $city = City::where('name', 'LIKE', '%' . $oldTrx->kabupaten . '%')->first();
-        }
-
-        // Handle null name - set to "UNKNOWN"
-        $customerName = empty(trim($oldTrx->nama ?? '')) ? 'UNKNOWN' : $oldTrx->nama;
-
-        // Generate customer code with fallbacks
+        $customerName = empty(trim($oldTrx->nama ?? '')) ? 'UNKNOWN_' . $oldTrx->id : $oldTrx->nama;
         $customerCode = $this->generateCustomerCode($oldTrx->no_kartu ?? null, $customerName);
+        $address = $oldTrx->alamat ?? 'UNKNOWN_ADDRESS';
+        $phone = $oldTrx->no_telp ?? '000000000';
 
-        return Customer::firstOrCreate(
-            ['code' => $customerCode],
-            [
-                'name' => $customerName,
-                'address' => $oldTrx->alamat ?? '',
-                'phone' => $oldTrx->no_telp ?? '',
-                'village_id' => null,
-                'subdistrict_id' => $subdistrict->id ?? null,
-                'city_id' => $city->id ?? null,
-                'province_id' => null,
-                'created_at' => $oldTrx->created_at ?? now(),
-                'updated_at' => $oldTrx->updated_at ?? now(),
-            ]
-        );
+        // Cari customer dengan alamat yang sama persis
+        $existingCustomer = Customer::where('address', $address)
+            ->where('phone', $phone) // Tambahkan phone sebagai kriteria tambahan
+            ->first();
+
+        // Jika tidak ada yang cocok persis, coba cari yang mirip (tanpa memperhatikan phone)
+        if (!$existingCustomer) {
+            $existingCustomer = Customer::where('address', $address)->first();
+        }
+
+        // Jika masih tidak ada, coba cari berdasarkan nama dan alamat yang mengandung string yang sama
+        if (!$existingCustomer) {
+            $existingCustomer = Customer::where('name', $customerName)
+                ->where('address', 'like', '%' . $address . '%')
+                ->first();
+        }
+
+        // Jika menemukan customer yang cocok, gunakan yang sudah ada
+        if ($existingCustomer) {
+            return $existingCustomer;
+        }
+
+        // Jika tidak ada yang cocok, buat customer baru
+        return Customer::create([
+            'code' => $customerCode,
+            'name' => $customerName,
+            'address' => $address,
+            'phone' => $phone,
+            'village_id' => null,
+            'subdistrict_id' => $this->findSubdistrictId($oldTrx->kecamatan ?? null),
+            'city_id' => $this->findCityId($oldTrx->kabupaten ?? null),
+            'province_id' => null,
+            'created_at' => $this->getValidDate($oldTrx->created_at),
+            'updated_at' => $this->getValidDate($oldTrx->updated_at),
+        ]);
+    }
+
+    protected function findSubdistrictId($subdistrictName)
+    {
+        if (empty($subdistrictName)) {
+            return null;
+        }
+
+        // Cari dengan LIKE karena format mungkin berbeda (misal: "KEC. XXX" vs "XXX")
+        $subdistrict = Subdistrict::where('name', 'like', '%' . $subdistrictName . '%')->first();
+        
+        return $subdistrict ? $subdistrict->id : null;
+    }
+
+    protected function findCityId($cityName)
+    {
+        if (empty($cityName)) {
+            return null;
+        }
+
+        // Handle kemungkinan format berbeda (misal: "KAB. CILACAP" vs "CILACAP")
+        $city = City::where('name', 'like', '%' . str_replace('KAB.', '', $cityName) . '%')->first();
+        
+        return $city ? $city->id : null;
     }
 
     protected function generateCustomerCode($cardNumber, $customerName)
@@ -254,13 +309,15 @@ class MigrateOldTransaction extends Command
 
     protected function determineStatus(OldTransaction $oldTrx)
     {
-        if (strtoupper($oldTrx->ket ?? '') === 'LUNAS' || strtoupper($oldTrx->ket ?? '') === 'CASH') {
+        $ket = strtoupper($oldTrx->ket ?? '');
+        if (strpos($ket, 'LUNAS') !== false || strpos($ket, 'CASH') !== false) {
             return 'paid';
         }
         
-        if (!empty($oldTrx->ang1) || !empty($oldTrx->ang2) || !empty($oldTrx->ang3) || 
-            !empty($oldTrx->ang4) || !empty($oldTrx->ang5)) {
-            return 'pending';
+        // If outstanding is 0, mark as paid
+        $outstanding = $this->calculateOutstanding($oldTrx);
+        if ($outstanding <= 0) {
+            return 'paid';
         }
         
         return 'pending';
@@ -280,28 +337,24 @@ class MigrateOldTransaction extends Command
 
     protected function createProductAndItem(OldTransaction $oldTrx, Transaction $transaction)
     {
-        // Handle null values with defaults
-        $colorName = !empty($oldTrx->warna) ? $oldTrx->warna : 'UNKNOWN';
-        $sizeName = !empty($oldTrx->size) ? $oldTrx->size : 'UNKNOWN';
-        $productName = !empty($oldTrx->nama_produk) ? $oldTrx->nama_produk : 'UNKNOWN PRODUCT';
+        $colorName = !empty($oldTrx->warna) ? $oldTrx->warna : 'UNKNOWN_' . $transaction->id;
+        $sizeName = !empty($oldTrx->size) ? $oldTrx->size : 'UNKNOWN_SIZE';
+        $productName = !empty($oldTrx->nama_produk) ? $oldTrx->nama_produk : 'UNKNOWN_PRODUCT_' . $transaction->id;
 
-        // Find or create color with unique code
         $color = Color::firstOrCreate(
             ['name' => $colorName],
             ['code' => $this->generateUniqueColorCode($colorName)]
         );
         
-        // Find or create size with unique code
         $size = Size::firstOrCreate(
             ['name' => $sizeName],
             ['code' => $this->generateUniqueSizeCode($sizeName)]
         );
         
-        // Create product variant with fallbacks
         $productVariant = ProductVariant::firstOrCreate(
             ['other_code' => $productName],
             [
-                'base_code' => Str::random(10),
+                'base_code' => 'PROD_' . Str::random(8),
                 'code' => null,
                 'other_code' => $productName,
                 'product_id' => null,
@@ -310,21 +363,20 @@ class MigrateOldTransaction extends Command
                 'heel_id' => null,
                 'gender' => null,
                 'image' => null,
-                'price' => null,
+                'price' => $this->getNumericValue($oldTrx->harga, 0),
                 'installment_price' => null,
             ]
         );
         
-        // Create transaction item with fallback price
         TransactionItem::create([
             'transaction_id' => $transaction->id,
             'product_variant_id' => $productVariant->id,
             'stock_type_id' => null,
             'quantity' => 1,
             'snapshot_name' => $productName . ' ' . $colorName . ' ' . $sizeName,
-            'snapshot_price' => $oldTrx->harga ?? 0,
-            'created_at' => $oldTrx->created_at ?? now(),
-            'updated_at' => $oldTrx->updated_at ?? now(),
+            'snapshot_price' => $this->getNumericValue($oldTrx->harga, 0),
+            'created_at' => $this->getValidDate($oldTrx->created_at),
+            'updated_at' => $this->getValidDate($oldTrx->updated_at),
         ]);
     }
 

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->string('invoice')->unique();
+            $table->string('invoice');
             $table->decimal('deal_price', 20);
             $table->foreignId('customer_id')->constrained('customers');
             $table->foreignId('seller_id')->constrained('users');       
