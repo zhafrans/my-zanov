@@ -200,7 +200,7 @@
           <div class="relative overflow-hidden h-80">
             <img
               src="{{ $variant->image ? Storage::url($variant->image) : 'https://via.placeholder.com/300x400?text=No+Image' }}"
-              alt="{{ $variant->product->name }}"
+              alt="{{ $variant->product->name ?? '-' }}"
               class="w-full h-full object-cover"
             />
             <div
@@ -209,7 +209,7 @@
               <button 
                 class="quick-view-btn bg-white text-black px-6 py-2 font-medium"
                 data-image="{{ $variant->image ? Storage::url($variant->image) : 'https://via.placeholder.com/300x400?text=No+Image' }}"
-                data-name="{{ $variant->product->name }}"
+                data-name="{{ $variant->product->name ?? '-' }}"
               >
                 Quick View
               </button>
@@ -224,8 +224,8 @@
           <div class="p-4">
             <div class="flex justify-between items-start">
               <div>
-                <h3 class="font-medium text-gray-900">{{ $variant->product->name }}</h3>
-                <p class="text-gray-500 text-sm">{{ $variant->heel->name }} Collection</p>
+                <h3 class="font-medium text-gray-900">{{ $variant->product->name ?? '-' }}</h3>
+                <p class="text-gray-500 text-sm">{{ $variant->heel->name ?? '-' }} Collection</p>
               </div>
               <span class="font-medium text-gray-900">Rp {{ number_format($variant->price, 0, ',', '.') }}</span>
             </div>

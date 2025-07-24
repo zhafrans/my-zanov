@@ -165,8 +165,8 @@
                                 <img src="{{ Storage::url($variant->image) }}" alt="{{ $variant->code }}" 
                                     class="h-full w-full object-cover"
                                     onerror="this.onerror=null;this.parentElement.innerHTML=generateInitials('{{ $variant->code }}')">
-                            @else
-                                {!! generateInitials($variant->code) !!}
+                            {{-- @else
+                                {!! generateInitials($variant->code) !!} --}}
                             @endif
                         </div>
                     </td>
@@ -177,7 +177,7 @@
                         <div class="text-sm font-medium text-gray-900">{{ $variant->code ?? $variant->other_code ?? '-' }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">{{ $variant->product->name }}</div>
+                        <div class="text-sm text-gray-900">{{ $variant->product->name ?? '-' }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-900">{{ $variant->color->name }}</div>
@@ -186,7 +186,7 @@
                         <div class="text-sm text-gray-900">{{ $variant->size->name }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">{{ $variant->heel->name }}</div>
+                        <div class="text-sm text-gray-900">{{ $variant->heel->name ?? '-' }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-900">

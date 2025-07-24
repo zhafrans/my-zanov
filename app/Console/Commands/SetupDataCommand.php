@@ -28,8 +28,9 @@ class SetupDataCommand extends Command
         $this->info('Starting data setup...');
 
         $steps = [
-            'Migrate Fresh (1/2)',
-            'Seeding Database (2/2)',
+            'Migrate Fresh (1/3)',
+            'Seeding Database (2/3)',
+            'Migrate Old Database (3/3)',
         ];
 
         foreach ($steps as $step) {
@@ -41,6 +42,9 @@ class SetupDataCommand extends Command
                     break;
                 case $steps[1]:
                     $this->call('db:seed');
+                    break;
+                case $steps[2]:
+                    $this->call('app:migrate-old');
                     break;
             }
         }

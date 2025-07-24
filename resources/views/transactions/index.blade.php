@@ -73,7 +73,7 @@
                     <option value="">All Products</option>
                     @foreach($productVariants as $variant)
                         <option value="{{ $variant->id }}" {{ request('product_variant_id') == $variant->id ? 'selected' : '' }}>
-                            {{ $variant->code }} - {{ $variant->product->name ?? '' }}
+                            {{ $variant->code }} - {{ $variant->product->name ?? '-' }}
                         </option>
                     @endforeach
                 </select>
@@ -181,7 +181,7 @@
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">{{ $transaction->invoice }}</div>
-                        <div class="text-sm text-gray-500">{{ $transaction->created_at->format('d M Y') }}</div>
+                        <div class="text-sm text-gray-500">{{ $transaction->transaction_date }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-primary-700 font-medium hover:underline">

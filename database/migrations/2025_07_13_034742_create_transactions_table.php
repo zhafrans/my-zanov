@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('is_tempo')->nullable(); 
             $table->date('tempo_at')->nullable(); 
             $table->text('note')->nullable(); 
+            $table->string('is_printed')->nullable(); 
             $table->timestamps();
         });
     }
