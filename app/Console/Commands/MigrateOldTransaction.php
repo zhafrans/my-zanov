@@ -206,22 +206,28 @@ class MigrateOldTransaction extends Command
 
     protected function createCustomer(OldTransaction $oldTrx)
     {
-        $customerName = empty(trim($oldTrx->nama ?? '')) ? 'UNKNOWN_' . $oldTrx->id : $oldTrx->nama;
+        // Ambil nama persis dari database lama, termasuk slash atau karakter khusus
+        $customerName = $oldTrx->nama ?? 'UNKNOWN_' . $oldTrx->id;
+        
+        // Jika string kosong setelah trim, gunakan fallback
+        if (empty(trim($customerName))) {
+            $customerName = 'UNKNOWN_' . $oldTrx->id;
+        }
+        
         $customerCode = $this->generateCustomerCode($oldTrx->no_kartu ?? null, $customerName);
         $address = $oldTrx->alamat ?? 'UNKNOWN_ADDRESS';
         $phone = $oldTrx->no_telp ?? '000000000';
 
         // Cari customer dengan alamat yang sama persis
         $existingCustomer = Customer::where('address', $address)
-            ->where('phone', $phone) // Tambahkan phone sebagai kriteria tambahan
+            ->where('phone', $phone)
             ->first();
 
-        // Jika tidak ada yang cocok persis, coba cari yang mirip (tanpa memperhatikan phone)
+        // Jika tidak ada yang cocok persis, coba cari yang mirip
         if (!$existingCustomer) {
             $existingCustomer = Customer::where('address', $address)->first();
         }
 
-        // Jika masih tidak ada, coba cari berdasarkan nama dan alamat yang mengandung string yang sama
         if (!$existingCustomer) {
             $existingCustomer = Customer::where('name', $customerName)
                 ->where('address', 'like', '%' . $address . '%')
@@ -233,6 +239,11 @@ class MigrateOldTransaction extends Command
             return $existingCustomer;
         }
 
+        // Cari ID wilayah
+        $cityId = $this->findCityId($oldTrx->kabupaten ?? null);
+        $subdistrictId = $this->findSubdistrictId($oldTrx->kecamatan ?? null);
+        $provinceId = $this->findProvinceId($cityId);
+
         // Jika tidak ada yang cocok, buat customer baru
         return Customer::create([
             'code' => $customerCode,
@@ -240,9 +251,9 @@ class MigrateOldTransaction extends Command
             'address' => $address,
             'phone' => $phone,
             'village_id' => null,
-            'subdistrict_id' => $this->findSubdistrictId($oldTrx->kecamatan ?? null),
-            'city_id' => $this->findCityId($oldTrx->kabupaten ?? null),
-            'province_id' => null,
+            'subdistrict_id' => $subdistrictId,
+            'city_id' => $cityId,
+            'province_id' => $provinceId, // Tambahkan province_id
             'created_at' => $this->getValidDate($oldTrx->created_at),
             'updated_at' => $this->getValidDate($oldTrx->updated_at),
         ]);
@@ -270,6 +281,20 @@ class MigrateOldTransaction extends Command
         $city = City::where('name', 'like', '%' . str_replace('KAB.', '', $cityName) . '%')->first();
         
         return $city ? $city->id : null;
+    }
+
+    protected function findProvinceId($cityId)
+    {
+        if (empty($cityId)) {
+            return null;
+        }
+
+        $city = City::find($cityId);
+        if ($city && $city->province_id) {
+            return $city->province_id;
+        }
+
+        return null;
     }
 
     protected function generateCustomerCode($cardNumber, $customerName)
