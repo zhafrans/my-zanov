@@ -421,20 +421,14 @@ class MigrateOldTransaction extends Command
 
     protected function determineStatus(OldTransaction $oldTrx)
     {
-        $ket = strtoupper($oldTrx->ket ?? '');
         $outstanding = $this->calculateOutstanding($oldTrx);
         
-        // If fully paid (outstanding <= 0)
+        // Jika lunas (outstanding <= 0)
         if ($outstanding <= 0) {
             return 'paid';
         }
         
-        // For transactions with "CASH TEMPO" but no installments
-        if (strpos($ket, 'CASH TEMPO') !== false) {
-            return 'installment';
-        }
-        
-        // Default to pending status
+        // Semua kasus lainnya dianggap pending
         return 'pending';
     }
     
