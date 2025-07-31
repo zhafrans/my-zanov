@@ -58,7 +58,7 @@ class TransactionController extends Controller
             ->paginate(10)
             ->appends($request->query());
 
-        $customers = Customer::orderBy('name')->get(['id', 'name']);
+        $customers = Customer::orderBy('name')->get(['id', 'name', 'code']);
         $productVariants = ProductVariant::with('product')->orderBy('code')->get(['id', 'code', 'product_id']);
         
         $sellerRole = DB::table('user_roles')->where('code', 'SALES')->first();

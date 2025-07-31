@@ -38,7 +38,9 @@
                 >
                     <option value="">All Customers</option>
                     @foreach($customers as $customer)
-                        <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
+                        <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
+                            {{ $customer->name }} - ({{ $customer->code }})
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -353,7 +355,21 @@
             select: '#customer_id',
             placeholder: 'All Customers',
             allowDeselect: true,
-            deselectLabel: '<span class="text-red-500">×</span>'
+            deselectLabel: '<span class="text-red-500">×</span>',
+            searchText: 'No customers found',
+            searchPlaceholder: 'Search customers...',
+            searchingText: 'Searching...',
+            // Tambahkan ini untuk format tampilan di dropdown
+            innerText: {
+                placeholder: function(placeholder) {
+                    return `<div class="text-gray-400">${placeholder}</div>`;
+                },
+                option: function(option) {
+                    // Split teks untuk styling yang berbeda
+                    const parts = option.text.split(' - ');
+                    return `<div>${parts[0]} <span class="text-gray-500">${parts[1] || ''}</span></div>`;
+                }
+            }
         });
 
         new SlimSelect({
