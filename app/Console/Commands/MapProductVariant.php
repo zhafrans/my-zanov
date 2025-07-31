@@ -1,0 +1,485 @@
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use Illuminate\Support\Str;
+
+class MapProductVariant extends Command
+{
+    protected $signature = 'app:map-product';
+    protected $description = 'Map product variants to products based on predefined mapping';
+
+    protected $productMapping = [
+          "022" => "B",
+        "023" => "B",
+        "072" => "B",
+        "103" => "S",
+        "104" => "S",
+        "104T" => "S",
+        "105" => "S",
+        "2" => "UNKNOWN_PRODUCT_2",
+        "202" => "UNKNOWN_PRODUCT_202",
+        "21" => "UNKNOWN_PRODUCT_21",
+        "22" => "UNKNOWN_PRODUCT_22",
+        "275" => "UNKNOWN_PRODUCT_275",
+        "312" => "A",
+        "313" => "A",
+        "314" => "A",
+        "3701" => "B",
+        "52" => "A",
+        "551" => "A",
+        "552" => "A",
+        "668" => "B",
+        "6780" => "UNKNOWN_PRODUCT_6780",
+        "688" => "B",
+        "700" => "B",
+        "701" => "B",
+        "702" => "B",
+        "703" => "B",
+        "A103" => "A",
+        "A312" => "A",
+        "A313" => "A",
+        "A314" => "A",
+        "A512" => "A",
+        "A52" => "A",
+        "A522" => "A",
+        "A551" => "A",
+        "A552" => "A",
+        "A668" => "A",
+        "A703" => "A",
+        "A712" => "A",
+        "ADI" => "ADIDAS",
+        "ADIDAS" => "ADIDAS",
+        "AL" => "AL",
+        "AL 01" => "AL",
+        "AL 2" => "AL",
+        "AL-01" => "AL",
+        "AL-1" => "AL",
+        "AL03" => "AL",
+        "AL1" => "AL",
+        "AL2" => "AL",
+        "AL3" => "AL",
+        "B" => "UNKNOWN_PRODUCT_B",
+        "B 700" => "B",
+        "B-024" => "B",
+        "B-W" => "UNKNOWN_PRODUCT_BW",
+        "B01" => "UNKNOWN_PRODUCT_B01",
+        "B022" => "B",
+        "B023" => "B",
+        "B024" => "B",
+        "B025" => "B",
+        "B203" => "B",
+        "B24" => "B",
+        "B28" => "R",
+        "B28(RAJUT)" => "R",
+        "B313" => "A",
+        "B551" => "A",
+        "B668" => "B",
+        "B687" => "B",
+        "B688" => "B",
+        "B6887" => "B",
+        "B700" => "B",
+        "B701" => "B",
+        "B702" => "B",
+        "B703" => "B",
+        "B706" => "B",
+        "B70L" => "R",
+        "BL" => "R",
+        "BL RAJUT" => "R",
+        "BLSK1" => "R",
+        "BW" => "UNKNOWN_PRODUCT_BW",
+        "CAMI" => "CANI",
+        "CANI" => "CANI",
+        "D-1" => "SD",
+        "D-3" => "SD",
+        "D-4" => "SD",
+        "D-W" => "SD",
+        "D023" => "B",
+        "D05" => "SD",
+        "D1" => "SD",
+        "D2" => "SD",
+        "D3" => "SD",
+        "D4" => "SD",
+        "F" => "F",
+        "F0" => "F",
+        "F01" => "F",
+        "F02" => "F",
+        "F02KULIT" => "F",
+        "F03" => "F",
+        "F04" => "F",
+        "F05" => "F",
+        "F06" => "F",
+        "F07" => "F",
+        "F08" => "F",
+        "F09" => "F",
+        "F1" => "F",
+        "F2" => "F",
+        "F3" => "F",
+        "F4" => "F",
+        "F5" => "F",
+        "F6" => "F",
+        "F8" => "F",
+        "F9" => "F",
+        "FA" => "F",
+        "FASHION" => "R",
+        "FASHION COWOK" => "R",
+        "FASHION-6782" => "R",
+        "FASHON" => "R",
+        "FLAT" => "F",
+        "FO1" => "F",
+        "FO2" => "F",
+        "FO3" => "F",
+        "FO4" => "F",
+        "FO5" => "F",
+        "FO6" => "F",
+        "FO7" => "F",
+        "FO8" => "F",
+        "G87" => "UNKNOWN_PRODUCT_G87",
+        "GSB2B" => "UNKNOWN_PRODUCT_GSB2B",
+        "IMPOR" => "UNKNOWN_PRODUCT_IMPOR",
+        "J-2" => "SJ",
+        "J2" => "SJ",
+        "JD-2" => "SJ",
+        "JK-3" => "SJ",
+        "JP2" => "SJ",
+        "K 3" => "SK",
+        "K-3" => "SK",
+        "K2" => "SK",
+        "K3" => "SK",
+        "KDM" => "R",
+        "KET" => "UNKNOWN_PRODUCT_KET",
+        "KS 1" => "UNKNOWN_PRODUCT_KS1",
+        "KWD" => "UNKNOWN_PRODUCT_KWD",
+        "L01" => "AL",
+        "M01" => "M",
+        "M01.3" => "M",
+        "M013" => "M",
+        "M02" => "M",
+        "M03" => "M",
+        "M07" => "M",
+        "M3" => "M",
+        "MD 1" => "M",
+        "MD IT" => "M",
+        "MO1" => "M",
+        "MO13" => "M",
+        "NAZARU" => "R",
+        "NOCI" => "UNKNOWN_PRODUCT_NOCI",
+        "P023" => "P",
+        "P23" => "P",
+        "PA" => "UNKNOWN_PRODUCT_PA",
+        "PDH" => "P",
+        "PDH1" => "P",
+        "PHD" => "P",
+        "PI" => "P",
+        "POLOS" => "UNKNOWN_PRODUCT_POLOS",
+        "PT" => "UNKNOWN_PRODUCT_PT",
+        "Q012" => "Q",
+        "Q02" => "Q",
+        "Q022" => "Q",
+        "Q023" => "Q",
+        "Q024" => "Q",
+        "Q027" => "Q",
+        "Q22" => "Q",
+        "Q23" => "Q",
+        "R" => "R",
+        "R LAMA" => "R",
+        "R PIN" => "R",
+        "R S" => "R",
+        "R-LEPES" => "R",
+        "R-SPORTI" => "R",
+        "R-TALI" => "R",
+        "R0" => "R",
+        "R01" => "R",
+        "R01, A312" => "UNKNOWN_PRODUCT_R01_A312",
+        "R01,R01,SP" => "UNKNOWN_PRODUCT_R01_R01_SP",
+        "R02" => "R",
+        "R02 (SPORTI COWOK)" => "R",
+        "R02=TALI" => "R",
+        "R024" => "R",
+        "R03" => "R",
+        "R1" => "R",
+        "R106" => "R",
+        "R2" => "R",
+        "R23" => "R",
+        "RAJUT" => "R",
+        "RAJUT BL" => "R",
+        "RAJUT KDM" => "R",
+        "RAJUT LAMA" => "R",
+        "RAJUT LEPES" => "R",
+        "RAJUT NAZARU" => "R",
+        "RB28" => "R",
+        "RI" => "R",
+        "RJT" => "R",
+        "RO1" => "R",
+        "RO2" => "R",
+        "RP" => "R",
+        "S" => "S",
+        "S 2" => "S",
+        "S PTH" => "S",
+        "S R" => "S",
+        "S-1" => "S",
+        "S-2" => "S",
+        "S-3" => "S",
+        "S01" => "S",
+        "S014" => "S",
+        "S016" => "S",
+        "S02" => "S",
+        "S04" => "S",
+        "S1" => "S",
+        "S10" => "S",
+        "S102" => "S",
+        "S103" => "S",
+        "S104" => "S",
+        "S105" => "S",
+        "S106" => "S",
+        "S107" => "S",
+        "S11" => "S",
+        "S111" => "S",
+        "S1117" => "S",
+        "S111T" => "S",
+        "S112" => "S",
+        "S112T" => "S",
+        "S113" => "S",
+        "S113T" => "S",
+        "S11T" => "S",
+        "S2" => "S",
+        "S2-3" => "S",
+        "S201" => "S",
+        "S202" => "S",
+        "S203" => "S",
+        "S205" => "S",
+        "S206" => "S",
+        "S22" => "S",
+        "S23" => "S",
+        "S3" => "S",
+        "S4" => "S",
+        "S5" => "S",
+        "S9" => "S",
+        "SANDAL" => "S",
+        "SANDAL CEWE" => "S",
+        "SB" => "S",
+        "SD" => "S",
+        "SD 3" => "S",
+        "SD 5" => "S",
+        "SD-3" => "S",
+        "SD03" => "S",
+        "SD1" => "S",
+        "SD2" => "S",
+        "SD2K" => "S",
+        "SD3" => "S",
+        "SD3K" => "S",
+        "SD4" => "S",
+        "SD5" => "S",
+        "SD5,SD4" => "UNKNOWN_PRODUCT_SD5_SD4",
+        "SD6" => "S",
+        "SD7" => "S",
+        "SD8" => "S",
+        "SD9" => "S",
+        "SELOP" => "S",
+        "SENDAL" => "S",
+        "SENDAL CEWE" => "S",
+        "SETU" => "S",
+        "SJ" => "SJ",
+        "SJ-2" => "SJ",
+        "SJ-3" => "SJ",
+        "SJ02" => "SJ",
+        "SJ03" => "SJ",
+        "SJ1" => "SJ",
+        "SJ2" => "SJ",
+        "SJ3" => "SJ",
+        "SJ5" => "SJ",
+        "SK" => "SK",
+        "SK 1" => "SK",
+        "SK1" => "SK",
+        "SK1 BL" => "SK",
+        "SK2" => "SK",
+        "SK3" => "SK",
+        "SK4" => "SK",
+        "SLOP MO2" => "M",
+        "SP" => "R",
+        "SP2" => "R",
+        "SP3" => "R",
+        "SPORT" => "R",
+        "SPORTI" => "R",
+        "SPORTI BL" => "R",
+        "SPORTI P/CK" => "R",
+        "SPORTI RAJUT" => "R",
+        "SPORTY" => "R",
+        "SPTH" => "R",
+        "SR01" => "R",
+        "SR02" => "R",
+        "ST" => "ST",
+        "ST 3" => "ST",
+        "ST-1" => "ST",
+        "ST01" => "ST",
+        "ST1" => "ST",
+        "ST2" => "ST",
+        "ST3" => "ST",
+        "STI" => "ST",
+        "SW" => "SW",
+        "SW-3" => "SW",
+        "SW1" => "SW",
+        "SW3" => "SW",
+        "SW4" => "SW",
+        "SZ01" => "SZ",
+        "SZ02" => "SZ",
+        "SZ05" => "SZ",
+        "SZ2" => "SZ",
+        "SZ3" => "SZ",
+        "TK" => "UNKNOWN_PRODUCT_TK",
+        "UNKNOWN_PRODUCT_1254" => "UNKNOWN_PRODUCT_1254",
+        "UNKNOWN_PRODUCT_1255" => "UNKNOWN_PRODUCT_1255",
+        "UNKNOWN_PRODUCT_1256" => "UNKNOWN_PRODUCT_1256",
+        "UNKNOWN_PRODUCT_1257" => "UNKNOWN_PRODUCT_1257",
+        "UNKNOWN_PRODUCT_1258" => "UNKNOWN_PRODUCT_1258",
+        "UNKNOWN_PRODUCT_1553" => "UNKNOWN_PRODUCT_1553",
+        "UNKNOWN_PRODUCT_1646" => "UNKNOWN_PRODUCT_1646",
+        "UNKNOWN_PRODUCT_1921" => "UNKNOWN_PRODUCT_1921",
+        "UNKNOWN_PRODUCT_1925" => "UNKNOWN_PRODUCT_1925",
+        "UNKNOWN_PRODUCT_2032" => "UNKNOWN_PRODUCT_2032",
+        "UNKNOWN_PRODUCT_218" => "UNKNOWN_PRODUCT_218",
+        "UNKNOWN_PRODUCT_2346" => "UNKNOWN_PRODUCT_2346",
+        "UNKNOWN_PRODUCT_2397" => "UNKNOWN_PRODUCT_2397",
+        "UNKNOWN_PRODUCT_2431" => "UNKNOWN_PRODUCT_2431",
+        "UNKNOWN_PRODUCT_245" => "UNKNOWN_PRODUCT_245",
+        "UNKNOWN_PRODUCT_2476" => "UNKNOWN_PRODUCT_2476",
+        "UNKNOWN_PRODUCT_2580" => "UNKNOWN_PRODUCT_2580",
+        "UNKNOWN_PRODUCT_2818" => "UNKNOWN_PRODUCT_2818",
+        "UNKNOWN_PRODUCT_2819" => "UNKNOWN_PRODUCT_2819",
+        "UNKNOWN_PRODUCT_2829" => "UNKNOWN_PRODUCT_2829",
+        "UNKNOWN_PRODUCT_2846" => "UNKNOWN_PRODUCT_2846",
+        "UNKNOWN_PRODUCT_2851" => "UNKNOWN_PRODUCT_2851",
+        "UNKNOWN_PRODUCT_2852" => "UNKNOWN_PRODUCT_2852",
+        "UNKNOWN_PRODUCT_2854" => "UNKNOWN_PRODUCT_2854",
+        "UNKNOWN_PRODUCT_2857" => "UNKNOWN_PRODUCT_2857",
+        "UNKNOWN_PRODUCT_33" => "UNKNOWN_PRODUCT_33",
+        "UNKNOWN_PRODUCT_6273" => "UNKNOWN_PRODUCT_6273",
+        "UNKNOWN_PRODUCT_7427" => "UNKNOWN_PRODUCT_7427",
+        "UNKNOWN_PRODUCT_7747" => "UNKNOWN_PRODUCT_7747",
+        "UNKNOWN_PRODUCT_8016" => "UNKNOWN_PRODUCT_8016",
+        "UNKNOWN_PRODUCT_960" => "UNKNOWN_PRODUCT_960",
+        "VIO" => "R",
+        "VIOGAMA" => "R",
+        "VIOGAMI" => "R",
+        "W-1" => "SW",
+        "W-2" => "SW",
+        "W-3" => "SW",
+        "W1" => "SW",
+        "W2" => "SW",
+        "W3" => "SW",
+        "W4" => "SW",
+        "W5" => "SW",
+        "WDK" => "R",
+        "Z-1" => "Z",
+        "Z-3" => "Z",
+        "Z-4" => "Z",
+        "Z01" => "Z",
+        "Z01-PITA" => "Z",
+        "Z02" => "Z",
+        "Z03" => "Z",
+        "Z04" => "Z",
+        "Z07" => "Z",
+        "Z1" => "Z",
+        "Z1-PITA" => "Z",
+        "Z1, D1" => "UNKNOWN_PRODUCT_Z1_D1",
+        "Z2" => "Z",
+        "Z3" => "Z",
+        "ZJ2" => "SJ",
+        "ZL3" => "Z",
+        "ZO1" => "Z",
+        "ZSZ01" => "Z"
+    ];
+
+    public function handle()
+    {
+        $this->info("Starting product variant mapping...");
+
+        $mappedCount = 0;
+        $createdProducts = 0;
+        $unmappedCount = 0;
+
+        // Get all product variants with other_code
+        $variants = ProductVariant::whereNotNull('other_code')
+                    ->where('other_code', '!=', '')
+                    ->get();
+
+        $total = count($variants);
+        $this->output->progressStart($total);
+
+        foreach ($variants as $variant) {
+            // Clean the other_code to match with mapping keys
+            $cleanCode = strtoupper(trim($variant->other_code));
+            
+            // Find the product code in mapping
+            $productCode = $this->findProductCode($cleanCode);
+
+            if ($productCode) {
+                // Find or create the product
+                $product = $this->findOrCreateProduct($productCode);
+                
+                if ($product) {
+                    $variant->product_id = $product->id;
+                    $variant->save();
+                    $mappedCount++;
+                }
+            } else {
+                $unmappedCount++;
+                $this->warn("No mapping found for product variant: {$variant->other_code}");
+            }
+
+            $this->output->progressAdvance();
+        }
+
+        $this->output->progressFinish();
+
+        // Summary
+        $this->info("\nMapping completed!");
+        $this->info("Total variants processed: {$total}");
+        $this->info("New products created: {$createdProducts}");
+        $this->info("Variants successfully mapped: {$mappedCount}");
+        $this->error("Variants with no mapping: {$unmappedCount}");
+
+        if ($unmappedCount > 0) {
+            $this->warn("Please check the unmapped variants and add them to the mapping array.");
+        }
+    }
+
+    protected function findProductCode($variantCode)
+    {
+        // First try exact match
+        if (isset($this->productMapping[$variantCode])) {
+            return $this->productMapping[$variantCode];
+        }
+
+        // Try to find partial matches (for codes with additional info)
+        foreach ($this->productMapping as $key => $value) {
+            if (strpos($variantCode, $key) !== false) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    protected function findOrCreateProduct($productCode)
+    {
+        // Clean the product code
+        $cleanCode = strtoupper(trim($productCode));
+
+        // Try to find existing product
+        $product = Product::where('code', $cleanCode)->first();
+
+        if (!$product) {
+            // Create new product
+            $product = Product::create([
+                'code' => $cleanCode,
+                'name' => $cleanCode,
+            ]);
+        }
+
+        return $product;
+    }
+}

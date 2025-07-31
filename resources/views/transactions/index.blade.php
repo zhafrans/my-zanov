@@ -201,7 +201,7 @@
                         <div class="text-sm text-gray-900">
                             @foreach($transaction->items as $item)
                                 <div>
-                                    {{ $item->quantity }}x {{ $item->productVariant->product->name ?? '' }} ({{ $item->productVariant->code }})
+                                    {{ $item->quantity }}x {{ $item->productVariant->product->name ?? '' }} ({{ $item->productVariant->code ?? $item->productVariant->other_code }})
                                 </div>
                             @endforeach
                         </div>

@@ -25,7 +25,7 @@ class TransactionController extends Controller
                 'customer:id,name,address',
                 'seller:id,name',
                 'items',
-                'items.productVariant:id,code,product_id',
+                'items.productVariant:id,code,product_id,other_code',
                 'items.productVariant.product:id,name'
             ])
             ->when($request->search, function($query) use ($request) {

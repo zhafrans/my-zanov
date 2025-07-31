@@ -99,6 +99,8 @@ class MigrateOldTransaction extends Command
             file_put_contents($logPath, json_encode($failedTransactions, JSON_PRETTY_PRINT));
             $this->error("Failed transactions log saved to: {$logPath}");
         }
+        // Log all product codes for manual mapping
+        $this->logProductCodes();
     }
 
     protected function processTransaction(OldTransaction $oldTrx)
@@ -503,5 +505,38 @@ class MigrateOldTransaction extends Command
         if (!empty($oldTrx->ang5)) $totalPaid += $oldTrx->ang5;
         
         return ($oldTrx->harga ?? 0) - $totalPaid;
+    }
+
+    protected function logProductCodes()
+    {
+        // Get all unique other_codes from product_variants
+        $productCodes = ProductVariant::whereNotNull('other_code')
+                        ->where('other_code', '!=', '')
+                        ->distinct()
+                        ->pluck('other_code')
+                        ->toArray();
+
+        // Prepare log directory
+        $logDirectory = storage_path('logs/migrations/');
+        if (!file_exists($logDirectory)) {
+            mkdir($logDirectory, 0755, true);
+        }
+
+        // Create log file
+        $logFileName = 'product_codes_' . now()->format('Ymd_His') . '.log';
+        $logPath = $logDirectory . $logFileName;
+
+        // Format the data for better readability
+        $logData = [
+            'timestamp' => now()->toDateTimeString(),
+            'total_unique_codes' => count($productCodes),
+            'product_codes' => $productCodes,
+            'mapping_suggestion' => 'You can use these codes to create products in the products table'
+        ];
+
+        // Write to log file
+        file_put_contents($logPath, json_encode($logData, JSON_PRETTY_PRINT));
+
+        $this->info("\nProduct codes log saved to: {$logPath}");
     }
 }
