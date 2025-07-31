@@ -26,16 +26,8 @@ class MigrateOldTransaction extends Command
     protected $signature = 'app:migrate-old';
     protected $description = 'Migrate data from old sales table to new database structure';
 
-    // Sales name to ID mapping
-    protected $salesMapping = [
-        'UMI' => 2,
-        'ATI' => 3,
-        'INTO' => 4,
-        'NISYA' => 5,
-        'WINDA' => 6,
-        'RESTI' => 7,
-        'ANNA' => 8,
-    ];
+    // Cache for user lookups
+    protected $userCache = [];
 
     public function handle()
     {
@@ -99,13 +91,14 @@ class MigrateOldTransaction extends Command
             file_put_contents($logPath, json_encode($failedTransactions, JSON_PRETTY_PRINT));
             $this->error("Failed transactions log saved to: {$logPath}");
         }
+        
         // Log all product codes for manual mapping
         $this->logProductCodes();
     }
 
     protected function processTransaction(OldTransaction $oldTrx)
     {
-        // Use no_kartu as invoice directly (allow duplicates)
+         // Use no_kartu as invoice directly (allow duplicates)
         $invoiceNumber = $oldTrx->no_kartu ?? 'INV' . $oldTrx->id;
 
         // Create or find customer with robust fallbacks
@@ -117,6 +110,10 @@ class MigrateOldTransaction extends Command
         // Determine status with fallback
         $status = $this->determineStatus($oldTrx);
 
+        // Check for CASH TEMPO in the note
+        $isTempo = $this->hasMultipleInstallments($oldTrx) || 
+                (strpos(strtoupper($oldTrx->ket ?? ''), 'CASH TEMPO') !== false) ? '1' : null;
+
         // Create transaction with robust fallbacks
         $transaction = Transaction::create([
             'invoice' => $invoiceNumber,
@@ -126,7 +123,7 @@ class MigrateOldTransaction extends Command
             'payment_type' => $paymentType,
             'status' => $status,
             'transaction_date' => $this->getValidDate($oldTrx->tgl_pengambilan ?? $oldTrx->tgl_ang1),
-            'is_tempo' => $this->hasMultipleInstallments($oldTrx) ? '1' : null,
+            'is_tempo' => $isTempo,
             'tempo_at' => $this->getValidDate($oldTrx->tgl_pengambilan ?? $oldTrx->tgl_ang1, true),
             'note' => $oldTrx->ket ?? null,
             'is_printed' => $oldTrx->is_created ?? 0,
@@ -159,22 +156,120 @@ class MigrateOldTransaction extends Command
         }
     }
 
+    protected function getSalesId($salesName)
+    {
+        $salesName = strtoupper(trim($salesName));
+        
+        // Handle special cases
+        if (empty($salesName) || $salesName === 'DP' || $salesName === 'CASH') {
+            return null;
+        }
+
+        // Check cache first
+        if (isset($this->userCache[$salesName])) {
+            return $this->userCache[$salesName];
+        }
+
+        // Find user with SALES role and matching name
+        $user = User::where('name', $salesName)
+            ->whereHas('role', function($query) {
+                $query->where('name', 'SALES');
+            })
+            ->first();
+
+        if ($user) {
+            $this->userCache[$salesName] = $user->id;
+            return $user->id;
+        }
+
+        // If not found, try to find any user with matching name
+        $user = User::where('name', $salesName)->first();
+        
+        if ($user) {
+            $this->userCache[$salesName] = $user->id;
+            return $user->id;
+        }
+
+        // Default to null if not found
+        return null;
+    }
+
+    protected function getCollectorId($collectorName)
+    {
+        $collectorName = strtoupper(trim($collectorName));
+        
+        if (empty($collectorName)) {
+            return null;
+        }
+
+        // Check cache first
+        if (isset($this->userCache['coll_'.$collectorName])) {
+            return $this->userCache['coll_'.$collectorName];
+        }
+
+        // Find user with COLLECTOR role and matching name
+        $user = User::where('name', $collectorName)
+            ->whereHas('role', function($query) {
+                $query->where('name', 'COLLECTOR');
+            })
+            ->first();
+
+        if ($user) {
+            $this->userCache['coll_'.$collectorName] = $user->id;
+            return $user->id;
+        }
+
+        // If not found, try to find any user with matching name
+        $user = User::where('name', $collectorName)->first();
+        
+        if ($user) {
+            $this->userCache['coll_'.$collectorName] = $user->id;
+            return $user->id;
+        }
+
+        // Default to null if not found
+        return null;
+    }
+
     protected function determinePaymentType($oldTrx)
     {
         $ket = strtoupper($oldTrx->ket ?? '');
-        if (strpos($ket, 'CASH') !== false) {
+        $outstanding = $this->calculateOutstanding($oldTrx);
+        $transactionDate = $this->getValidDate($oldTrx->tgl_pengambilan ?? $oldTrx->tgl_ang1);
+        
+        // Consider as cash if:
+        // 1. No outstanding amount AND
+        // 2. (Marked as CASH or LUNAS or paid on transaction date)
+        if ($outstanding <= 0 && 
+            (strpos($ket, 'CASH') !== false || 
+            strpos($ket, 'LUNAS') !== false ||
+            $this->isFullyPaidOnTransactionDate($oldTrx))) {
             return 'cash';
         }
         
-        // If there are any installment payments, it's installment
-        if (!empty($oldTrx->ang1) || !empty($oldTrx->ang2) || !empty($oldTrx->ang3) || 
-            !empty($oldTrx->ang4) || !empty($oldTrx->ang5)) {
-            return 'installment';
-        }
-        
-        // Default to cash if no installments
-        return 'cash';
+        // All other cases should be considered as installment
+        return 'installment';
     }
+
+    protected function isFullyPaidOnTransactionDate(OldTransaction $oldTrx)
+    {
+        $transactionDate = $this->getValidDate($oldTrx->tgl_pengambilan ?? $oldTrx->tgl_ang1);
+        $outstanding = $this->calculateOutstanding($oldTrx);
+        
+        // Check if there are any installment payments made on transaction date
+        $hasSameDayPayment = false;
+        
+        if (!empty($oldTrx->ang1) && $this->getValidDate($oldTrx->tgl_ang1) == $transactionDate) {
+            $hasSameDayPayment = true;
+        }
+        if (!empty($oldTrx->ang2) && $this->getValidDate($oldTrx->tgl_ang2) == $transactionDate) {
+            $hasSameDayPayment = true;
+        }
+        // ... check ang3, ang4, ang5 similarly if needed
+        
+        return $outstanding <= 0 && $hasSameDayPayment;
+    }
+
 
     protected function getNumericValue($value, $default = 0)
     {
@@ -255,7 +350,7 @@ class MigrateOldTransaction extends Command
             'village_id' => null,
             'subdistrict_id' => $subdistrictId,
             'city_id' => $cityId,
-            'province_id' => $provinceId, // Tambahkan province_id
+            'province_id' => $provinceId,
             'created_at' => $this->getValidDate($oldTrx->created_at),
             'updated_at' => $this->getValidDate($oldTrx->updated_at),
         ]);
@@ -324,32 +419,25 @@ class MigrateOldTransaction extends Command
         return $code;
     }
 
-    protected function getSalesId($salesName)
-    {
-        if (empty($salesName)) {
-            return 1; // Default to admin user if empty
-        }
-
-        $salesName = strtoupper(trim($salesName));
-        return $this->salesMapping[$salesName] ?? 1;
-    }
-
     protected function determineStatus(OldTransaction $oldTrx)
     {
         $ket = strtoupper($oldTrx->ket ?? '');
-        if (strpos($ket, 'LUNAS') !== false || strpos($ket, 'CASH') !== false) {
-            return 'paid';
-        }
-        
-        // If outstanding is 0, mark as paid
         $outstanding = $this->calculateOutstanding($oldTrx);
+        
+        // If fully paid (outstanding <= 0)
         if ($outstanding <= 0) {
             return 'paid';
         }
         
+        // For transactions with "CASH TEMPO" but no installments
+        if (strpos($ket, 'CASH TEMPO') !== false) {
+            return 'installment';
+        }
+        
+        // Default to pending status
         return 'pending';
     }
-
+    
     protected function hasMultipleInstallments(OldTransaction $oldTrx)
     {
         $count = 0;
@@ -359,7 +447,8 @@ class MigrateOldTransaction extends Command
         if (!empty($oldTrx->ang4)) $count++;
         if (!empty($oldTrx->ang5)) $count++;
         
-        return $count > 1;
+        // Consider as tempo if multiple installments OR has CASH TEMPO note
+        return $count > 1 || (strpos(strtoupper($oldTrx->ket ?? ''), 'CASH TEMPO')) !== false;
     }
 
     protected function createProductAndItem(OldTransaction $oldTrx, Transaction $transaction)
@@ -486,12 +575,6 @@ class MigrateOldTransaction extends Command
                 'updated_at' => $oldTrx->updated_at ?? now(),
             ]);
         }
-    }
-
-    protected function getCollectorId($collectorName)
-    {
-        // Default to admin user (ID 1) if collector not specified
-        return 1;
     }
 
     protected function calculateOutstanding(OldTransaction $oldTrx)

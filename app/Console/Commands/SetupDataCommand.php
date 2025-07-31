@@ -18,7 +18,7 @@ class SetupDataCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Get materials, Odoo products and seed the database';
+    protected $description = 'migrate old database';
 
     /**
      * Execute the console command.
@@ -28,9 +28,10 @@ class SetupDataCommand extends Command
         $this->info('Starting data setup...');
 
         $steps = [
-            'Migrate Fresh (1/3)',
-            'Seeding Database (2/3)',
-            'Migrate Old Database (3/3)',
+            'Migrate Fresh (1/4)',
+            'Seeding Database (2/4)',
+            'Migrate Old Database (3/4)',
+            'Migrate Old Database (4/4)',
         ];
 
         foreach ($steps as $step) {
@@ -45,6 +46,9 @@ class SetupDataCommand extends Command
                     break;
                 case $steps[2]:
                     $this->call('app:migrate-old');
+                    break;
+                case $steps[3]:
+                    $this->call('app:map-product');
                     break;
             }
         }

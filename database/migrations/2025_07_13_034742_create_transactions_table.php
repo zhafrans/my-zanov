@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('invoice');
             $table->decimal('deal_price', 20);
             $table->foreignId('customer_id')->constrained('customers');
-            $table->foreignId('seller_id')->constrained('users');       
+            $table->foreignId('seller_id')->nullable()->constrained('users');       
             $table->enum('payment_type', ['installment', 'cash']);
             $table->enum('status', ['paid', 'pending']);
             $table->date('transaction_date'); 

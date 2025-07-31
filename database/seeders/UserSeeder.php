@@ -12,62 +12,102 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Buat user admin terlebih dahulu
-        User::create([
-            'name' => 'Zhafran',
-            'code' => fake()->numerify('###'),
-            'username' => 'admin',
-            'email' => 'adm@example.com',
-            'password' => Hash::make('password'),
-            'address' => 'Jl. Contoh No.123',
-            'profile_image' => 'default.png',
-            'role_id' => 1, // pastikan role_id 1 ada
-            'is_active' => 1,
-            'email_verified_at' => now(),
-            'remember_token' => Str::random(10),
-        ]);
+        // Helper untuk membuat user dengan nama unik
+        $createdUsernames = [];
 
-        // Ambil semua role dari tabel user_roles
-        $roles = DB::table('user_roles')->get(); // pastikan nama tabelnya benar
+        // Map role name ke role_id (pastikan nama role sesuai isi tabel)
+        $roleMap = DB::table('user_roles')->pluck('id', 'name');
 
-        $counter = 1;
-
-        // Buat satu user untuk setiap role
-        foreach ($roles as $role) {
+        // Buat user SUPERADMIN
+        $superadmins = ['ZHAFRAN', 'SITI', 'IMAM', 'NAUFAL'];
+        foreach ($superadmins as $name) {
+            $username = strtolower($name);
+            if (in_array($username, $createdUsernames)) {   
+                continue;
+            }
             User::create([
-                'name' => fake()->name(),
-                'code' => fake()->unique()->numerify('#####'),
-                'username' => 'roleuser' . $counter,
-                'email' => "roleuser{$counter}@example.com",
+                'name' => $name,
+                'code' => fake()->unique()->numerify('###'),
+                'username' => $username,
+                'email' => "{$username}@example.com",
                 'password' => Hash::make('password'),
                 'address' => fake()->address(),
                 'profile_image' => 'default.png',
-                'role_id' => $role->id,
+                'role_id' => $roleMap['SUPERADMIN'] ?? 1,
                 'is_active' => 1,
                 'email_verified_at' => now(),
                 'remember_token' => Str::random(10),
             ]);
-            $counter++;
+            $createdUsernames[] = $username;
         }
 
-        // Buat user tambahan sebanyak 20 - jumlah role
-        $totalToGenerate = 20;
-        $remainingUsers = $totalToGenerate - $roles->count();
-
-        for ($i = 1; $i <= $remainingUsers; $i++) {
+        // Buat user ADMIN
+        $admins = ['AFIF'];
+        foreach ($admins as $name) {
+            $username = strtolower($name);
+            if (in_array($username, $createdUsernames)) {
+                continue;
+            }
             User::create([
-                'name' => fake()->name(),
-                'code' => fake()->unique()->numerify('#####'),
-                'username' => 'user' . $i,
-                'email' => "user{$i}@example.com",
+                'name' => $name,
+                'code' => fake()->unique()->numerify('###'),
+                'username' => $username,
+                'email' => "{$username}@example.com",
                 'password' => Hash::make('password'),
                 'address' => fake()->address(),
                 'profile_image' => 'default.png',
-                'role_id' => $roles->random()->id,
+                'role_id' => $roleMap['ADMIN'] ?? 2,
                 'is_active' => 1,
                 'email_verified_at' => now(),
                 'remember_token' => Str::random(10),
             ]);
+            $createdUsernames[] = $username;
+        }
+
+        // Buat user SALES
+        $sales = ['UMI', 'ATI', 'INTO', 'NISYA', 'LUKMAN', 'WINDA', 'RESTI', 'ANNA'];
+        foreach ($sales as $name) {
+            $username = strtolower($name);
+            if (in_array($username, $createdUsernames)) {
+                continue;
+            }
+            User::create([
+                'name' => $name,
+                'code' => fake()->unique()->numerify('###'),
+                'username' => $username,
+                'email' => "{$username}@example.com",
+                'password' => Hash::make('password'),
+                'address' => fake()->address(),
+                'profile_image' => 'default.png',
+                'role_id' => $roleMap['SALES'] ?? 3,
+                'is_active' => 1,
+                'email_verified_at' => now(),
+                'remember_token' => Str::random(10),
+            ]);
+            $createdUsernames[] = $username;
+        }
+
+        // Buat user COLLECTOR
+        $collectors = ['UMI', 'LUKMAN', 'IRFAN', 'NISYA', 'INTO', 'IRIS', 'WINDA', 'TONI', 'ANA'];
+        foreach ($collectors as $name) {
+            $usernameBase = strtolower($name);
+            $username = in_array($usernameBase, $createdUsernames) ? $usernameBase . '_coll' : $usernameBase;
+
+            User::create([
+                'name' => $name,
+                'code' => fake()->unique()->numerify('###'),
+                'username' => $username,
+                'email' => "{$username}@example.com",
+                'password' => Hash::make('password'),
+                'address' => fake()->address(),
+                'profile_image' => 'default.png',
+                'role_id' => $roleMap['COLLECTOR'] ?? 4,
+                'is_active' => 1,
+                'email_verified_at' => now(),
+                'remember_token' => Str::random(10),
+            ]);
+
+            $createdUsernames[] = $username;
         }
     }
 }

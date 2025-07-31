@@ -11,6 +11,13 @@ class UserRoleSeeder extends Seeder
     {
         DB::table('user_roles')->insert([
             [
+                'code' => 'SUPERADMIN',
+                'name' => 'Super Administrator',
+                'scope' => 'GLOBAL',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'code' => 'ADMIN',
                 'name' => 'Administrator',
                 'scope' => 'GLOBAL',
